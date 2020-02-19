@@ -1,0 +1,51 @@
+@charset "utf-8";
+
+@import "common.scss";
+
+@font-face {
+  font-family: fantiFont;
+  src: url(font/fanti.ttf);
+}
+
+@font-face {
+  font-family: jiantiFont;
+  src: url(font/jianti.ttf);
+}
+
+#app {
+  text-align: center;
+  background: #ede1cb;
+}
+
+.poet-box {
+  background: url('bg.jpeg') no-repeat;
+  text-align: center;
+  margin: calc(25% - 181px) auto 0 auto;
+  width: 580px;
+  height: 362px;
+  padding-top: 12px;
+  position: relative;
+  .change-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    cursor: pointer;
+    color: white;
+    text-shadow: 1px 1px 4px #000;
+    font-weight: bold;
+  }
+  h3,
+  p {
+    margin: 0;
+    padding-top: 10px;
+  }
+  h3 {
+    color: white;
+    text-shadow: 1px 1px 4px #000;
+    font-weight: bold;
+    font-size: 20px;
+  }
+  p {
+    line-height: 25px;
+  }
+}

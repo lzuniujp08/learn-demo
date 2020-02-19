@@ -3,6 +3,7 @@ var that, map;
 var app = new Vue({
   el: '#app',
   data: {
+    isSimplified: true,
     sum: 0,
     epidemicArray: [],
     epidemicData: {},

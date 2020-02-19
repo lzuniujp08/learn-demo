@@ -11,7 +11,9 @@
 </head>
 
 <body>
-  <div id="app">
+  <div
+   id="app"
+   :style="{fontFamily: isSimplified ? 'jiantiFont' : 'fantiFont'}">
     <div class="title">
       <img src="css/logo.jpg" alt="logo">
       <span>疫情地图</span>
@@ -58,6 +60,8 @@
     <ul class="legend">
       <li>
         图例
+        <input type="checkbox" v-model="isSimplified">
+        {{ isSimplified ? '简体' : '繁体' }}
       </li>
       <li
        v-for="(item, index) in colorMap"
