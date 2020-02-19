@@ -1,4 +1,10 @@
 @charset "utf-8";
+
+@font-face {
+  font-family: fantiFont;
+  src: url(font/fanti.ttf);
+}
+
 /*定义滚动条高宽及背景 高宽分别对应横竖滚动条的尺寸*/
 ::-webkit-scrollbar {
   width: 5px;
@@ -28,7 +34,7 @@ html {
   height: 100%;
   overflow: hidden;
   font-size: 16px;
-
+  font-family: fantiFont;
   .ol-zoom {
     display: none;
   }
