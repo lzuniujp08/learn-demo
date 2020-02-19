@@ -7,15 +7,33 @@ var app = new Vue({
     padding: 2,
     overlays: [
       {
+        id: 1,
         coords: [11760366.56, 4662347.84],
         level: 2
       },
       {
+        id: 2,
         coords: [11760366.56, 4662347.84],
         level: 1
       },
       {
+        id: 3,
         coords: [11760366.56, 4662347.84],
+        level: 3
+      },
+      {
+        id: 4,
+        coords: [12760366.56, 4662347.84],
+        level: 2
+      },
+      {
+        id: 5,
+        coords: [12760366.56, 4662347.84],
+        level: 1
+      },
+      {
+        id: 6,
+        coords: [12760366.56, 4662347.84],
         level: 3
       }
     ],
@@ -82,19 +100,17 @@ var app = new Vue({
     clusterOverlays() {
       for (var i = 0; i < that.overlays.length; i++) {
         const d = that.overlays[i];
-        if (i === 0) {
-          that.createCluster(d);
-        } else {
-          for (var j = 0;j < that.clusterData.length;j++) {
-            const _d = that.clusterData[j].p;
-            const isNear = that.clusterTest(d, _d);
-            if (isNear) {
-              that.clusterData[j].data.push(d);
-            } else {
-              that.createCluster(d);
-            }
+        let _clustered = false;
+        for (var j = 0;j < that.clusterData.length;j++) {
+          const _d = that.clusterData[j].p;
+          const isNear = that.clusterTest(d, _d);
+          if (isNear) {
+            that.clusterData[j].data.push(d);
+            _clustered = true;
+            break;
           }
         }
+        if (!_clustered) that.createCluster(d);
       }
     },
     initOverlays() {
