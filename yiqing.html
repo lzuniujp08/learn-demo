@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title>疫情地图</title>
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="https://openlayers.org/en/v4.6.5/css/ol.css" type="text/css">
+</head>
+
+<body>
+  <div id="app">
+    <div class="title">
+      <img src="css/logo.jpg" alt="logo">
+      <span>疫情地图</span>
+    </div>
+    <div class="statics">
+      <div class="tips">
+        <b>数据来源：</b>国家卫健委
+      </div>
+      <table cellspacing="0" cellpadding="0">
+        <tr>
+          <th style="color: red;">
+            {{ getStatics.diagnosed }}
+          </th>
+          <th style="color: darkgreen;">
+            {{ getStatics.cure }}
+          </th>
+          <th style="color: grey;">
+            {{ getStatics.death }}
+          </th>
+        </tr>
+        <tr>
+          <td>确诊病例</td>
+          <td>治愈病例</td>
+          <td>死亡病例</td>
+        </tr>
+      </table>
+    </div>
+    <div id="map">
+      <div class="overlay" id="overlay">
+        <ul>
+          <li> {{ selected && selected.name }} </li>
+          <li>
+            <b>确诊：</b> <span style="color: red;">{{ selected && selected.diagnosed }}</span>
+          </li>
+          <li>
+            <b>治愈：</b> <span style="color: darkgreen;">{{ selected && selected.cure }}</span>
+          </li>
+          <li>
+            <b>死亡：</b> <span style="color: grey;">{{ selected && selected.death }}</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+    <ul class="legend">
+      <li>
+        图例
+      </li>
+      <li
+       v-for="(item, index) in colorMap"
+       :key="index">
+        <span :style="{backgroundColor: item.color}"></span>
+        {{ item.label }}
+      </li>
+    </ul>
+    <div class="table">
+      <table cellspacing="0" cellpadding="0">
+        <tr>
+          <th width="60">地区</th>
+          <th width="45">确诊</th>
+          <th width="45">治愈</th>
+          <th width="45">死亡</th>
+        </tr>
+      </table>
+      <div class="tbody">
+        <table cellspacing="0" cellpadding="0">
+          <tr
+            v-for="(item, index) in epidemicArray"
+            :key="index">
+            <td width="60" :style="{color: index < 5 ? 'red' : 'black'}">{{ item.zone }}</td>
+            <td width="45" style="color: red;">{{ item.diagnosed }}</td>
+            <td width="45" style="color: darkgreen;">{{ item.cure }}</td>
+            <td width="45" style="color: grey;">{{ item.death }}</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://openlayers.org/en/v4.6.5/build/ol.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+  <script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
