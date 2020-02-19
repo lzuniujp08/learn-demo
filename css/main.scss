@@ -2,6 +2,36 @@
 
 @import "common.scss";
 
+.circle-overlay {
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  box-shadow: 1px 1px 4px #ccc;
+  width: 18px;
+  height: 18px;
+  line-height: 18px;
+  text-align: center;
+  cursor: pointer;
+}
+.overlays {
+  position: absolute;
+  z-index: 99;
+  white-space: nowrap;
+  overflow: hidden;
+  &.hide {
+    display: none;
+    max-width: 0;
+    transition: max-width 1s, display 1s;
+  }
+  &.show {
+    display: block;
+    max-width: 400px;
+    transition: max-width 1s, display 1s;
+  }
+  .cluster-overlay {
+    float: left;
+  }
+}
+
 .overlay {
   padding: 10px;
   background-color: rgba(255, 255, 255, 0.85);
