@@ -18,6 +18,13 @@ var app = new Vue({
         source: null,
         style: that.styleFunction
       });
+      // var image = new ol.layer.Image({
+      //   source: new ol.source.ImageStatic({
+      //     imageExtent: [12631979.217766721,4505524.1013878435,13274849.277097877,5251284.6049773842],
+      //     url: '../css/tem.png'
+      //   }),
+      //   opacity: 0.6
+      // })
       map = new ol.Map({
         controls: ol.control.defaults({
           attribution: false
