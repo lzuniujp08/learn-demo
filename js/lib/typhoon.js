@@ -23,9 +23,17 @@ var Typhoon = function(map) {
 
     that.init = function() {
       that.addWarnLine();
+      // 添加地图事件
+      that.addMapEvent();
+
       $.get('../../data/201929.json', res => {
         that._typhoonList = res;
         that.showTyphoon(that._typhoonList[0]);
+
+        setTimeout(function() {
+          that.showTyphoon(that._typhoonList[1]);
+          that.removeTyphoon(that._typhoonList[0].tfbh);
+        }, 2000);
       })
     };
 
@@ -122,6 +130,7 @@ var Typhoon = function(map) {
       });
     };
 
+    // 展示台风
     that.showTyphoon = function(typhoonData) {
       const tfbh = typhoonData.tfbh;
 
@@ -133,11 +142,18 @@ var Typhoon = function(map) {
       // 2. 创建展示图层
       that.addTyphoonLayer(tfbh);
 
-      // 3.添加地图事件
-      that.addMapEvent();
-
-      // 4.开始播放
+      // 3.开始播放
       that.playTyphoon(tfbh);
+    };
+
+    // 移除台风
+    that.removeTyphoon = function(tfbh) {
+      // 删除台风名称
+      that._map.removeOverlay(that._nameOverlays[tfbh]);
+      // 删除展示图层
+      that._map.removeLayer(that._typhoonLayers[tfbh].layer);
+      // 消除定时器
+      clearInterval(that._typhoonPlayFlag[tfbh]);
     };
 
     // 添加台风名称
@@ -218,6 +234,9 @@ var Typhoon = function(map) {
 
     // 播放单个点
     that.play = function(index, tfbh) {
+      // 删除预报
+      that.removeForecast(tfbh);
+
       that._typhoonPlayIndex[tfbh] = index;
       const points = that._typhoonData[tfbh].points;
       const point = points[index];
@@ -242,16 +261,21 @@ var Typhoon = function(map) {
       }
     };
 
-    // 展示预报数据
-    that.showForecast = function(tfbh, livePoint) {
+    // 删除预报数据
+    that.removeForecast = function(tfbh) {
       const source = that._typhoonLayers[tfbh].source;
-
-      // 1. 先删除上次的预报数据
       for (var i = 0; i < that._forecastFeatures[tfbh].length; i++) {
         const f = that._forecastFeatures[tfbh][i];
         source.removeFeature(f);
       }
+      that._forecastFeatures[tfbh] = [];
+    }
 
+    // 展示预报数据
+    that.showForecast = function(tfbh, livePoint) {
+      const source = that._typhoonLayers[tfbh].source;
+      // 1. 删除预报数据
+      that.removeForecast(tfbh);
       // 2. 添加预报
       const forecast = livePoint.forecast;
       const features = [];
