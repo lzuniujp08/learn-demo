@@ -1,4 +1,5 @@
 var that, map;
+var that, map;
 
 var app = new Vue({
   el: '#app',
