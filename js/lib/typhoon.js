@@ -160,7 +160,7 @@ var Typhoon = function(map) {
     that.addNameOverlay = function(typhoonData) {
       const nameDom = document.createElement('div');
       nameDom.setAttribute('class', 'typhoon-name');
-      nameDom.innerHTML = typhoonData.name;
+      nameDom.innerHTML = [typhoonData.tfbh, typhoonData.name].join('');
       const pointStart = typhoonData.points[0];
       const position = ol.proj.fromLonLat([pointStart.longitude, pointStart.latitude]);
       const nameOverlay = new ol.Overlay({
