@@ -18,12 +18,12 @@ app.renderer.resize(window.innerWidth, window.innerHeight);
 
 document.body.appendChild(app.view);
 
-// drawRandomCircle();
+drawRandomCircle();
 
 function drawRandomCircle() {
   console.time("控制台计时器一");
   const size = 20;
-  const num = 250;
+  const num = 20;
   const sum = size * size * num / 10000;
   console.log(sum);
   const xInterval = w / size;
@@ -37,7 +37,7 @@ function drawRandomCircle() {
       setTimeout(() => {
         for (var k = 0; k < num; k++) {
           const pos = getRandomPosition(xmin, xmax, ymin, ymax);
-          drawCicle(1, pos);
+          drawCicle(5, pos);
         }
       });
     }
@@ -48,7 +48,7 @@ function drawRandomCircle() {
 function drawCicle(size, position) {
   size = size ? size : 5;
   const circle = new PIXI.Graphics()
-  circle.beginFill(0xff33cc);
+  circle.beginFill(0xff33cc, 0.3);
   circle.drawCircle(0, 0, size);
   circle.endFill();
   circle.x = position[0];
@@ -85,10 +85,10 @@ function randomNum(minNum, maxNum) {
 // options.loadType: 源文件是怎么加载进来的？默认是Resource.LOAD_TYPE.XHR。
 // options.xhrType: 用XHR的时候该怎么处理数据？ 默认是Resource.XHR_RESPONSE_TYPE.DEFAULT。
 // callbackFunction: 当这个特定的函数加载完，这个特定的函数将会被执行。
-PIXI.loader
-  .add('logo', '../css/09.png')
-  .on("progress", loadProgressHandler)
-  .load(loaded);
+// PIXI.loader
+//   .add('logo', '../css/09.png')
+//   .on("progress", loadProgressHandler)
+//   .load(loaded);
 
 function loadProgressHandler(loader, resource) {
   console.log(loader);
