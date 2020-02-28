@@ -27,6 +27,25 @@ var app = new Vue({
 
       viewer.cesiumWidget.creditContainer.style.display = "none"; //去cesium logo水印
       that.centerAtHome();
+
+      that.addLayer();
+    },
+    addLayer() {
+      var url = "http://www.google.cn/maps/vt?lyrs=h@189&gl=cn&x={x}&y={y}&z={z}";
+      var tdtLayer = viewer.scene.imageryLayers.addImageryProvider(
+        new Cesium.UrlTemplateImageryProvider({
+          url: url
+        })
+      );
+      //50%透明度
+      tdtLayer.alpha = 1;
+      //两倍亮度
+      tdtLayer.brightness = 1.0;
+      // 设置自定义地形数据
+      // var terrainProvider = new Cesium.CesiumTerrainProvider({
+      //   url: 'http://localhost:8888/terrain/'
+      // });
+      // viewer.terrainProvider = terrainProvider; //地形数据源 terrainProvider
     },
     centerAtHome() {
       var centeropt = {
