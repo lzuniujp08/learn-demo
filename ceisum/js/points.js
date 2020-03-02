@@ -39,15 +39,24 @@ var app = new Vue({
       $.get('../../data/capital.json', res => {
         for (var i = 1; i < res.length; i++) {
           var data = res[i];
-          var lon = data.lon;
-          var lat = data.lat;
-          viewer.entities.add({
-            position: Cesium.Cartesian3.fromDegrees(lon, lat, 0),
-            point: {
-              color: Cesium.Color.RED,
-              pixelSize: 4
-            }
+          var longitude = data.lon;
+          var latitude = data.lat;
+          var height = Math.floor(Math.random() * 400000 + 200000);
+          var color = Cesium.Color.fromHsl((0.6 - (height * 0.5)), 1.0, 0.5);
+          var surfacePosition = Cesium.Cartesian3.fromDegrees(longitude, latitude, 0);
+          var heightPosition = Cesium.Cartesian3.fromDegrees(longitude, latitude, height);
+          //WebGL Globe only contains lines, so that's the only graphics we create.
+          var polyline = new Cesium.PolylineGraphics();
+          polyline.material = new Cesium.ColorMaterialProperty(color);
+          polyline.width = new Cesium.ConstantProperty(2);
+          polyline.arcType = new Cesium.ConstantProperty(Cesium.ArcType.NONE);
+          polyline.positions = new Cesium.ConstantProperty([surfacePosition, heightPosition]);
+          //The polyline instance itself needs to be on an entity.
+          var entity = new Cesium.Entity({
+            id: ' index ' + i.toString(),
+            polyline: polyline
           });
+          viewer.entities.add(entity);
         }
         viewer.flyTo(viewer.entities, {
           duration: 3
