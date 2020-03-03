@@ -1,5 +1,6 @@
 var that, map;
 var bounds = [12434387.12160866, 2368046.639617785, 12556838.561481258, 2499523.266067402];
+var vecSource, _feature;
 var app = new Vue({
   el: '#app',
   data: {
@@ -14,13 +15,28 @@ var app = new Vue({
       var osm = new ol.layer.Tile({
         source: new ol.source.OSM()
       });
-
+      var feature = new ol.Feature({
+        geometry: ol.geom.Polygon.fromExtent(bounds)
+      });
+      vecSource = new ol.source.Vector({
+        features: [feature]
+      });
+      var vec = new ol.layer.Vector({
+        source: vecSource,
+        zIndex: 9,
+        style: new ol.style.Style({
+          stroke: new ol.style.Stroke({
+            color: 'red',
+            width: 1
+          })
+        })
+      });
       map = new ol.Map({
         controls: ol.control.defaults({
           attribution: false
         }),
         target: 'map',
-        layers: [osm],
+        layers: [osm, vec],
         view: new ol.View({
           minZoom: 2,
           maxZoom: 18,
@@ -29,6 +45,7 @@ var app = new Vue({
         })
       });
       map.getView().fit(bounds);
+
       that.img = new Image();
       that.img.src = '../css/wind.svg';
       that.img.onload = function () {
@@ -41,20 +58,10 @@ var app = new Vue({
         })
         map.addLayer(image);
       }
-      // setTimeout(() => {
-      //   const source = new ol.source.ImageStatic({
-      //     url: '../css/wind.svg',
-      //     imageExtent: bounds
-      //   });
-      //   let image = new ol.layer.Image({
-      //     source: source,
-      //     opacity: 0.6
-      //   })
-      //   map.addLayer(image);
-      // }, 1000)
     },
-    canvasFunction(extent, res, pixelRatio, imgSize) {
-      const size = map.getSize();
+    canvasFunction: function(extent, res, pixelRatio, imgSize) {
+      const _topLeft = [extent[0], extent[3]];
+      const _srcTopLeft = map.getPixelFromCoordinate(_topLeft);
       const topLeft = [bounds[0], bounds[3]];
       const bottomRight = [bounds[2], bounds[1]];
       const srcTopLeft = map.getPixelFromCoordinate(topLeft);
@@ -62,25 +69,14 @@ var app = new Vue({
       const width = Math.round(srcBottomRight[0] - srcTopLeft[0]);
       const height = Math.round(srcBottomRight[1] - srcTopLeft[1]);
       var canvas = document.createElement('canvas');
-      canvas.width = size[0];
-      canvas.height = size[1];
+      canvas.width = imgSize[0];
+      canvas.height = imgSize[1];
       var ctx = canvas.getContext('2d');
-      console.log('srcTopLeft', srcTopLeft);
-      console.log('size', [width, height]);
-      const x = srcTopLeft[0];
-      const y = size[1] - srcTopLeft[1];
-      console.log('xy', [x, y]);
+      ctx.scale(pixelRatio, pixelRatio);
+      const x = srcTopLeft[0] - _srcTopLeft[0] ;
+      const y = srcTopLeft[1] - _srcTopLeft[1];
       ctx.drawImage(that.img, x, y, width, height);
       return canvas;
-    },
-    getImageSize(bounds) {
-      var res = map.getView().getResolution();
-      var _min = [bounds[0], bounds[1]],
-        _max = [bounds[2], bounds[3]];
-      var aa = 100;
-      var _w = Math.round((_max[0] - _min[0])/aa),
-        _h = Math.round((_max[1] - _min[1])/aa);
-      return [_w, _h];
     }
   }
 });
