@@ -67,8 +67,8 @@ var app = new Vue({
         ctx.arc(x, y, 4, 0, 2*Math.PI);
         //从左上角到右下角
         var radialGradient = ctx.createRadialGradient(x,y,0,x,y,2);
-        radialGradient.addColorStop(0, 'rgba(255, 0, 0, 0.6)');
-        radialGradient.addColorStop(0.6, 'rgba(255, 0, 0, 0)');
+        radialGradient.addColorStop(0, 'rgba(255, 0, 0, 0.95)');
+        radialGradient.addColorStop(1, 'rgba(255, 0, 0, 0)');
         ctx.fillStyle = radialGradient;
         ctx.fill();
       }
