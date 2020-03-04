@@ -5,12 +5,12 @@ var app = new Vue({
   data: {
     vector: null
   },
-  mounted() {
+  mounted:function() {
     that = this;
     that.initMap();
   },
   methods: {
-    initMap() {
+    initMap:function() {
       var osm = new ol.layer.Tile({
         source: new ol.source.OSM()
       });
@@ -40,7 +40,7 @@ var app = new Vue({
       });
       that.setDayNightSource();
     },
-    styleFunction() {
+    styleFunction:function() {
       return new ol.style.Style({
         fill: new ol.style.Fill({
           color: 'rgba(0, 0, 0, 0.5)'
@@ -51,23 +51,22 @@ var app = new Vue({
         // })
       });
     },
-    setDayNightSource() {
-      let coords = that.getCoordinates();
+    setDayNightSource:function() {
+      var coords = that.getCoordinates();
       coords = [coords];
-      console.log(coords);
-      const geom = new ol.geom.Polygon(coords);
-      const proj = map.getView().getProjection();
+      var geom = new ol.geom.Polygon(coords);
+      var proj = map.getView().getProjection();
       geom.transform('EPSG:4326', proj);
-      const feature = new ol.Feature({
+      var feature = new ol.Feature({
         geometry: geom
       });
-      const source = new ol.source.Vector({
+      var source = new ol.source.Vector({
         features: [feature]
       });
       that.vector.setSource(source);
     },
     // 此处开始与计算白天黑夜坐标点有关系的
-    getCoordinates(time, options) {
+    getCoordinates:function(time, options) {
       var rad2deg = 180 / Math.PI;
       var deg2rad = Math.PI / 180;
 
@@ -122,7 +121,7 @@ var app = new Vue({
       // Return polygon
       return lonlat;
     },
-    _sunEclipticPosition(julianDay) {
+    _sunEclipticPosition:function(julianDay) {
       var deg2rad = Math.PI / 180;
       // Days since start of J2000.0
       var n = julianDay - 2451545.0;
@@ -140,7 +139,7 @@ var app = new Vue({
         0.0014 * Math.cos(2 * g * deg2rad);
       return { lambda: lambda, R: R };
     },
-    _eclipticObliquity(julianDay) {
+    _eclipticObliquity:function(julianDay) {
       var n = julianDay - 2451545.0;
       // Julian centuries since J2000.0
       var T = n / 36525;
@@ -152,7 +151,7 @@ var app = new Vue({
                 - T * 4.34e-8 / 3600))));
       return epsilon;
     },
-    _sunEquatorialPosition(sunEclLon, eclObliq) {
+    _sunEquatorialPosition:function(sunEclLon, eclObliq) {
       var rad2deg = 180 / Math.PI;
       var deg2rad = Math.PI / 180;
 

@@ -10,12 +10,12 @@ var app = new Vue({
     t: 0,
     isDown: false
   },
-  mounted() {
+  mounted:function() {
     that = this;
     that.init();
   },
   methods: {
-    init() {
+    init:function() {
       that.dv = document.getElementById('dragPanel');
       //鼠标移动
       window.onmousemove = function(e) {
@@ -30,7 +30,7 @@ var app = new Vue({
         that.dv.style.top = nt + 'px';
       }
     },
-    startDrag(e) {
+    startDrag:function(e) {
       //获取x坐标和y坐标
       that.x = e.clientX;
       that.y = e.clientY;
@@ -42,7 +42,7 @@ var app = new Vue({
       //设置样式
       that.dv.style.cursor = 'move';
     },
-    endDrag(e) {
+    endDrag:function(e) {
       //开关关闭
       that.isDown = false;
       that.dv.style.cursor = 'default';
