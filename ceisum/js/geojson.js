@@ -2,7 +2,10 @@ var that, viewer;
 
 var app = new Vue({
   el: '#app',
-  data: {},
+  data: {
+    entities: [],
+    temp: []
+  },
   mounted() {
     that = this;
     that.initMap();
@@ -41,6 +44,7 @@ var app = new Vue({
       promise.then(function(dataSource) {
         viewer.dataSources.add(dataSource);
         var entities = dataSource.entities.values;
+        that.entities = entities;
         var colorHash = {};
         var ellipsoid = viewer.scene.globe.ellipsoid;
         for (var i = 0; i < entities.length; i++) {
@@ -49,11 +53,14 @@ var app = new Vue({
             alpha: 1
           });
           entity.polygon.material = color;
-          entity.polygon.outline = false;
+          entity.polygon.outline = true;
           var height = Math.floor(Math.random() * 400000 + 200000);
           entity.polygon.extrudedHeight = height;
 
-          // entity.polygon.classificationType = Cesium.ClassificationType.TERRAIN; //区块直接贴在地面上
+
+          entity.polygon.classificationType = Cesium.ClassificationType.TERRAIN; //区块直接贴在地面上
+
+          /*
           var polyPostions = entity.polygon.hierarchy.getValue(Cesium.JulianDate.now()).positions; //从多边形上取出他的顶点
           var polyCenter = Cesium.BoundingSphere.fromPoints(polyPostions).center; //通过顶点构建一个包围球
           polyCenter = Cesium.Ellipsoid.WGS84.scaleToGeodeticSurface(polyCenter); //把包围球得中心做贴地得偏移
@@ -76,10 +83,42 @@ var app = new Vue({
               scale: 1
             }
           });
-
+          */
           viewer.zoomTo(promise);
+          that.addEvent();
         }
       });
+    },
+    addEvent() {
+      viewer.screenSpaceEventHandler.setInputAction(function onLeftClick(movement) {
+        var pickedFeature = viewer.scene.pick(movement.position);
+        if (typeof(pickedFeature) != "undefined") {
+          var name_id = pickedFeature.id.nameID; //获取每条线的nameID
+          that.hightlightline(name_id);
+        }
+      }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+    },
+    hightlightline(nameid) {
+      var exists = that.temp.indexOf(nameid);
+      if (exists <= -1) {
+        that.highlight(nameid, 50, 50);
+        that.temp.push(nameid); // 添加线nameID到数组，
+      } else {
+        that.highlight(nameid, 10, 10);
+        that.temp.splice(exists, 1); //删除对应的nameID
+      }
+    },
+    highlight(nameid, width1, width2) {
+      for (var o = 0; o < that.entities.length; o++) {
+        var m = that.entities[o];
+        if (nameid == o) {
+          m.polyline.width = width1;
+          (m.polyline.material = new Cesium.PolylineGlowMaterialProperty({
+            glowPower: .1, //一个数字属性，指定发光强度，占总线宽的百分比。
+            color: Cesium.Color.ORANGERED.withAlpha(.9)
+          }), width2)
+        }
+      }
     }
   }
 });
