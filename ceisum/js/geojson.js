@@ -46,7 +46,7 @@ var app = new Vue({
         for (var i = 0; i < entities.length; i++) {
           var entity = entities[i];
           var color = Cesium.Color.fromRandom({
-            alpha: 0.5
+            alpha: 1
           });
           entity.polygon.material = color;
           entity.polygon.outline = false;

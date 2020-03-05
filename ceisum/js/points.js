@@ -36,15 +36,22 @@ var app = new Vue({
       that.addPoints();
     },
     addPoints() {
-      $.get('../../data/capital.json', res => {
-        for (var i = 1; i < res.length; i++) {
-          var data = res[i];
-          var longitude = data.lon;
-          var latitude = data.lat;
-          var height = Math.floor(Math.random() * 400000 + 200000);
+      var heightScale = 10000000;
+      $.get('../../data/population.json', res => {
+        res = res[0][1];
+        for (var i = 0; i < res.length; i += 3) {
+          var latitude = res[i];
+          var longitude = res[i + 1];
+          var height = res[i + 2];
+          //Ignore lines of zero height.
+          if (height === 0) {
+            continue;
+          }
           var color = Cesium.Color.fromHsl((0.6 - (height * 0.5)), 1.0, 0.5);
+          //Create a random bright color.
+          // var color = Cesium.Color.fromRandom();
           var surfacePosition = Cesium.Cartesian3.fromDegrees(longitude, latitude, 0);
-          var heightPosition = Cesium.Cartesian3.fromDegrees(longitude, latitude, height);
+          var heightPosition = Cesium.Cartesian3.fromDegrees(longitude, latitude, height * heightScale);
           //WebGL Globe only contains lines, so that's the only graphics we create.
           var polyline = new Cesium.PolylineGraphics();
           polyline.material = new Cesium.ColorMaterialProperty(color);
