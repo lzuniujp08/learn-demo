@@ -16,7 +16,10 @@ var app = new Vue({
       });
 
       viewer = new Cesium.Viewer('map', {
-        terrainProvider: Cesium.createWorldTerrain(),
+        terrainProvider: Cesium.createWorldTerrain({
+          requestWaterMask : true, // required for water effects
+          requestVertexNormals : true // required for terrain lighting
+        }),
         infoBox: false,
         animation: false, //是否创建动画小器件，左下角仪表
         timeline: false, //是否显示时间线控件
@@ -26,6 +29,11 @@ var app = new Vue({
       });
 
       viewer.cesiumWidget.creditContainer.style.display = "none"; //去cesium logo水印
+      // 打开深度检测，那么在地形以下的对象不可见
+      viewer.scene.globe.depthTestAgainstTerrain = true;
+      // 开启全球光照
+      viewer.scene.globe.enableLighting = true;
+
       that.centerAtHome();
 
       that.addLayer();
