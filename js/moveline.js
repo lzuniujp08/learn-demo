@@ -10,7 +10,7 @@ var app = new Vue({
     t: 0,
     isDown: false,
     trackPos: {
-      l: 0,
+      l: -10,
       r: 0
     }
   },
@@ -34,6 +34,8 @@ var app = new Vue({
         if (nl <= that.trackPos.l) nl = that.trackPos.l;
         that.dv.style.left = nl + 'px';
       }
+
+      window.onmouseup = that.endDrag;
     },
     trackClick: function(e) {
       const trackDiv = document.getElementById('trackDiv');
