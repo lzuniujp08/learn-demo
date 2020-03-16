@@ -17,14 +17,20 @@ var app = new Vue({
 
       viewer = new Cesium.Viewer('map', {
         terrainProvider: Cesium.createWorldTerrain({
-          requestWaterMask : true, // required for water effects
-          requestVertexNormals : true // required for terrain lighting
+          requestWaterMask: true, // required for water effects
+          requestVertexNormals: true // required for terrain lighting
         }),
         infoBox: false,
         animation: false, //是否创建动画小器件，左下角仪表
         timeline: false, //是否显示时间线控件
         geocoder: false, //是否显示地名查找控件
         baseLayerPicker: false, //是否显示图层选择控件
+        geocoder: false,
+        homeButton: false,
+        sceneModePicker: false,
+        navigationHelpButton: false,
+        fullscreenButton: false,
+        vrButton: false,
         imageryProvider: imageryProvider
       });
 

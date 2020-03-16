@@ -54,6 +54,7 @@ var app = new Vue({
           });
           entity.polygon.material = color;
           entity.polygon.outline = true;
+          // entity.polygon.outlineColor = Ceisum.Color(1, 0, 0, 0.5);
           var height = Math.floor(Math.random() * 400000 + 200000);
           entity.polygon.extrudedHeight = height;
 
