@@ -210,4 +210,55 @@ ul {
     border-radius: 50%;
     background: rgba(255, 0, 0, 0.5); }
 
+.time-label {
+  position: absolute;
+  font-size: 14px;
+  padding: 5px 10px;
+  background-color: rgba(255, 255, 255, 0.65);
+  z-index: 99;
+  left: calc(50% - 20px);
+  top: 20px;
+  border-radius: 5px; }
+
+.ctrl-button {
+  position: absolute;
+  font-size: 14px;
+  padding: 5px 10px;
+  background-color: rgba(255, 255, 255, 0.65);
+  z-index: 99;
+  right: 20px;
+  top: 20px;
+  border-radius: 5px; }
+  .ctrl-button label {
+    display: inline-block;
+    width: 60px; }
+  .ctrl-button button {
+    border-radius: 100%;
+    width: 50px;
+    height: 50px;
+    line-height: 50px;
+    text-align: center;
+    border: none;
+    background-color: darkcyan;
+    color: antiquewhite;
+    cursor: pointer; }
+
+.map-label {
+  background-color: rgba(255, 255, 255, 0.65);
+  border-radius: 5px;
+  padding: 2px 5px;
+  font-size: 12px; }
+  .map-label:after {
+    top: 100%;
+    border: solid transparent;
+    content: " ";
+    height: 0;
+    width: 0;
+    position: absolute;
+    pointer-events: none; }
+  .map-label:after {
+    border-top-color: rgba(255, 255, 255, 0.65);
+    border-width: 5px;
+    left: calc(50% - 5px); }
+
 /*# sourceMappingURL=main.css.map */

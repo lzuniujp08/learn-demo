@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title>白天不懂夜的黑</title>
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="stylesheet" href="../css/main.css">
+  <link href="lib/mapbox-gl.css" rel="stylesheet" />
+</head>
+
+<body>
+  <div id="app">
+    <div class="ctrl-button">
+      <label>opacity：</label>
+      <input type="range" max="1" min="0" step="0.01" v-model="opacity"><br>
+    </div>
+    <div id="map"></div>
+  </div>
+  <script src="lib/mapbox-gl.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+  <script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+  <script>
+    var that, map;
+
+    var app = new Vue({
+      el: '#app',
+      data: {
+        opacity: 0.65
+      },
+      mounted: function() {
+        that = this;
+        that.initMap();
+      },
+      watch: {
+        opacity: function(val) {
+          map.setPaintProperty(
+            'heatmap',
+            'heatmap-opacity',
+            Number(val)
+          );
+        }
+      },
+      methods: {
+        initMap: function() {
+          const token = 'pk.eyJ1IjoibHp1bml1anAwOCIsImEiOiJjam5iZmZwamMwN3RnM2twOHByeHJ4NzJoIn0.IVVIcCdRmFQE8-nQF-8wTA';
+          mapboxgl.accessToken = token;
+          var mapStyle = {
+            "version": 8,
+            "name": "Dark",
+            "sources": {
+              "XYZTile": {
+                "type": "raster",
+                "tiles": ['http://www.google.cn/maps/vt?lyrs=s@189&gl=cn&x={x}&y={y}&z={z}'],
+                "tileSize": 256
+              }
+            },
+            "layers": [{
+              "id": "XYZTile",
+              "type": "raster",
+              "source": "XYZTile",
+              "minzoom": 0,
+              "maxzoom": 22
+            }]
+          };
+
+          map = new mapboxgl.Map({
+            container: 'map',
+            maxZoom: 18,
+            minZoom: 0,
+            zoom: 3,
+            center: [109.1699, 45.9719],
+            style: mapStyle,
+            attributionControl: false
+          });
+          let firstInit = true;
+          map.on('load', function() {
+            $.get('../data/heatmap.geojson', res => {
+              that.addHeatmap(res);
+            })
+          });
+        },
+        addHeatmap(geojson) {
+          map.addSource('heatmap', {
+            type: 'geojson',
+            data: geojson
+          });
+          map.addLayer({
+            'id': 'heatmap',
+            'type': 'heatmap',
+            'source': 'heatmap',
+            'maxzoom': 9,
+            'paint': {
+              // Increase the heatmap weight based on frequency and property magnitude
+              'heatmap-weight': [
+                'interpolate',
+                ['linear'],
+                ['get', 'mag'],
+                0,
+                0,
+                6,
+                1
+              ],
+              // Increase the heatmap color weight weight by zoom level
+              // heatmap-intensity is a multiplier on top of heatmap-weight
+              'heatmap-intensity': [
+                'interpolate',
+                ['linear'],
+                ['zoom'],
+                0,
+                1,
+                9,
+                3
+              ],
+              // Color ramp for heatmap.  Domain is 0 (low) to 1 (high).
+              // Begin color ramp at 0-stop with a 0-transparancy color
+              // to create a blur-like effect.
+              'heatmap-color': [
+                'interpolate',
+                ['linear'],
+                ['heatmap-density'],
+                0,
+                'rgba(33,102,172,0)',
+                0.2,
+                'rgb(103,169,207)',
+                0.4,
+                'rgb(209,229,240)',
+                0.6,
+                'rgb(253,219,199)',
+                0.8,
+                'rgb(239,138,98)',
+                1,
+                'rgb(178,24,43)'
+              ],
+              // Adjust the heatmap radius by zoom level
+              'heatmap-radius': [
+                'interpolate',
+                ['linear'],
+                ['zoom'],
+                0,
+                2,
+                9,
+                20
+              ],
+              // Transition from heatmap to circle layer by zoom level
+              'heatmap-opacity': [
+                'interpolate',
+                ['linear'],
+                ['zoom'],
+                7,
+                1,
+                9,
+                0
+              ]
+            }
+            // 'paint': {
+            //   'heatmap-opacity': that.opacity,
+            // }
+          })
+        }
+      }
+    });
+  </script>
+</body>
+
+</html>

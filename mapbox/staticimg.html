@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title>白天不懂夜的黑</title>
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="stylesheet" href="../css/main.css">
+  <link href="lib/mapbox-gl.css" rel="stylesheet" />
+</head>
+
+<body>
+  <div id="app">
+    <div v-show="currentTime !== ''" class="time-label">
+      {{ currentTime }}
+    </div>
+    <div class="ctrl-button">
+      <button @click="togglePlay()">
+        {{ isplay > 0 ? '暂停' : '播放' }}
+      </button>
+      {{ opacity }}
+      <br>
+      <input type="range" max="1" min="0" step="0.01" v-model="opacity">
+    </div>
+    <div id="map"></div>
+  </div>
+  <script src="lib/mapbox-gl.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+  <script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+  <script>
+    var that, map;
+
+    var app = new Vue({
+      el: '#app',
+      data: {
+        playInterval: 500,
+        playFlag: 0,
+        isplay: false,
+        images: [],
+        current: 0,
+        currentTime: '',
+        opacity: 0.65
+      },
+      mounted: function() {
+        that = this;
+        that.initMap();
+      },
+      watch: {
+        opacity: function(val) {
+          map.setPaintProperty(
+            'loopimage',
+            'raster-opacity',
+            Number(val)
+          );
+        }
+      },
+      methods: {
+        initMap: function() {
+          const token = 'pk.eyJ1IjoibHp1bml1anAwOCIsImEiOiJjam5iZmZwamMwN3RnM2twOHByeHJ4NzJoIn0.IVVIcCdRmFQE8-nQF-8wTA';
+          mapboxgl.accessToken = token;
+          var mapStyle = {
+            "version": 8,
+            "name": "Dark",
+            "sources": {
+              "mapbox": {
+                "type": "vector",
+                "url": "mapbox://mapbox.mapbox-streets-v6"
+              },
+              "XYZTile": {
+                "type": "raster",
+                "tiles": ['http://webrd01.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&lang=zh_cn&size=1&scale=1&style=8'],
+                "tileSize": 256,
+              }
+            },
+            "sprite": "mapbox://sprites/mapbox/dark-v9",
+            "glyphs": "mapbox://fonts/mapbox/{fontstack}/{range}.pbf",
+            "layers": [{
+                "id": "background",
+                "type": "background",
+                "paint": {
+                  "background-color": "#111"
+                }
+              },
+              {
+                "id": "XYZTile",
+                "type": "raster",
+                "source": "XYZTile",
+                "minzoom": 0,
+                "maxzoom": 22
+              },
+              {
+                "id": "boundaries",
+                "source": "mapbox",
+                "source-layer": "admin",
+                "type": "line",
+                "paint": {
+                  "line-color": "#797979"
+                }
+              }
+            ]
+          };
+
+          map = new mapboxgl.Map({
+            container: 'map',
+            maxZoom: 18,
+            minZoom: 0,
+            zoom: 3,
+            center: [109.1699, 45.9719],
+            style: mapStyle,
+            attributionControl: false
+          });
+          let firstInit = true;
+          map.on('styledata', function() {
+            if (firstInit) {
+              that.getImageData();
+              firstInit = false;
+            }
+          });
+        },
+        getImageData() {
+          $.get('../data/tem.json', res => {
+            that.images = res.data.list;
+            that.play();
+          });
+        },
+        play() {
+          that.currentTime = that.images[that.current].time;
+          var coords = [
+            [70, 65],
+            [145, 65],
+            [145, 15],
+            [70, 15]
+          ];
+          const source = map.getSource('loopimage');
+          if (!source) {
+            map.addSource('loopimage', {
+              type: 'image',
+              url: that.images[that.current].url,
+              coordinates: coords
+            });
+            map.addLayer({
+              'id': 'loopimage',
+              'source': 'loopimage',
+              'type': 'raster',
+              'paint': {
+                'raster-opacity': that.opacity,
+                'raster-fade-duration': 0
+              }
+            });
+          } else {
+            source.updateImage({
+              url: that.images[that.current].url,
+              coordinates: coords
+            })
+          }
+        },
+        stopPlay() {
+          window.clearInterval(that.playFlag);
+        },
+        togglePlay() {
+          if (that.isplay) {
+            that.stopPlay();
+          } else {
+            that.playFlag = setInterval(function() {
+              that.current++;
+              that.play();
+              if (that.current === that.images.length) {
+                that.stopPlay();
+              }
+            }, that.playInterval);
+          }
+          that.isplay = !that.isplay;
+        }
+      }
+    });
+  </script>
+</body>
+
+</html>
