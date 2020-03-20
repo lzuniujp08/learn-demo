@@ -242,6 +242,24 @@ ul {
     background-color: darkcyan;
     color: antiquewhite;
     cursor: pointer; }
+  .ctrl-button li {
+    float: left;
+    border: 1px solid forestgreen;
+    padding: 5px 8px;
+    margin: 0;
+    list-style: none;
+    cursor: pointer; }
+    .ctrl-button li.active {
+      background-color: forestgreen;
+      color: white; }
+    .ctrl-button li:first-child {
+      border-top-left-radius: 4px;
+      border-bottom-left-radius: 4px;
+      border-right: none; }
+    .ctrl-button li:last-child {
+      border-top-right-radius: 4px;
+      border-bottom-right-radius: 4px;
+      border-left: none; }
 
 .map-label {
   background-color: rgba(0, 0, 0, 0.65);

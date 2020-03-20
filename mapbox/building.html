@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset='utf-8' />
+    <title>Join local JSON data with vector tile geometries</title>
+    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
+    <link href="lib/mapbox-gl.css" rel="stylesheet" />
+    <style>
+        body { margin:0; padding:0; }
+        #map { position:absolute; top:0; bottom:0; width:100%; }
+    </style>
+</head>
+<body>
+<div id='map'>
+</div>
+<script src="lib/mapbox-gl.js"></script>
+<script>
+  const token = 'pk.eyJ1IjoibHp1bml1anAwOCIsImEiOiJjam5iZmZwamMwN3RnM2twOHByeHJ4NzJoIn0.IVVIcCdRmFQE8-nQF-8wTA';
+  mapboxgl.accessToken = token;
+    var map = new mapboxgl.Map({
+      container: 'map',
+      maxZoom: 18,
+      minZoom: 0,
+      zoom: 15,
+      center: [116.3911, 39.9168],
+      style: 'mapbox://styles/mapbox/light-v10',
+      attributionControl: false,
+      pitch: 45,
+      bearing: -17.6,
+      antialias: true
+    });
+    map.on('load', function() {
+        map.addSource('building',{
+            'type':'vector',
+            'scheme':'tms',
+            'tiles':['http://localhost:8086/geoserver/gwc/service/tms/1.0.0/jtmet%3Abuilding@EPSG%3A900913@pbf/{z}/{x}/{y}.pbf']
+        });
+
+        map.addLayer({
+            'id': '3d-buildings',
+            'source': 'building',
+            // 注意source-layer一定要与上面服务中的图层名称一致
+            'source-layer':'building',
+            'type': 'fill-extrusion',
+            'paint': {
+                'fill-extrusion-color': [
+                    'interpolate',
+                    ['linear'],
+                    ['get', 'height'],
+                    0, 'rgba(255,255,191, 0.65)',
+                    50, 'rgba(253,174,97, 0.65)',
+                    100, "rgba(215,25,28, 0.65)",
+                ],
+                'fill-extrusion-height': ['get', 'height'],
+                'fill-extrusion-opacity': .8
+            }
+        });
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title>白天不懂夜的黑</title>
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="stylesheet" href="../css/main.css">
+  <link href="lib/mapbox-gl.css" rel="stylesheet" />
+</head>
+
+<body>
+  <div id="app">
+    <div class="ctrl-button">
+      <li
+       v-for="(item, index) in basemaps"
+       :key="index"
+       :class="basemap === item.code ? 'active' : ''"
+       @click="basemap = item.code">
+       {{ item.name }}
+     </li>
+    </div>
+    <div id="map"></div>
+  </div>
+  <script src="lib/mapbox-gl.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+  <script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+  <script>
+    var that, map;
+
+    var app = new Vue({
+      el: '#app',
+      data: {
+        basemaps: [
+          {
+            code: 'streets-v11',
+            name: '街道'
+          },
+          {
+            code: 'dark-v10',
+            name: '暗黑'
+          }
+        ],
+        basemap: 'streets-v11'
+      },
+      mounted: function() {
+        that = this;
+        that.initMap();
+      },
+      watch: {
+        basemap(val) {
+          map.setStyle('mapbox://styles/mapbox/' + val);
+          that.addWmsLayer();
+        }
+      },
+      methods: {
+        initMap: function() {
+          const token = 'pk.eyJ1IjoibHp1bml1anAwOCIsImEiOiJjam5iZmZwamMwN3RnM2twOHByeHJ4NzJoIn0.IVVIcCdRmFQE8-nQF-8wTA';
+          mapboxgl.accessToken = token;
+
+          map = new mapboxgl.Map({
+            container: 'map',
+            maxZoom: 18,
+            minZoom: 0,
+            zoom: 3,
+            center: [109.1699, 45.9719],
+            style: 'mapbox://styles/mapbox/' + that.basemap,
+            attributionControl: false
+          });
+
+          map.on('load', function() {
+            that.addWmsLayer();
+          });
+        },
+        addWmsLayer() {
+          const source = map.getSource('wmsLayer');
+          if(source) {
+            map.removeLayer('wmsLayer');
+            map.removeSource('wmsLayer');
+          }
+          map.addSource('wmsLayer', {
+            "type": "raster",
+            "tiles": ['http://39.106.122.204:8086/geoserver/railway/wms?service=WMS&version=1.1.0&request=GetMap&layers=railway:layer_base&styles=&bbox={bbox-epsg-3857}&width=256&height=256&srs=EPSG:3857&format=image/png&TRANSPARENT=TRUE'],
+            "tileSize": 256
+          });
+          map.addLayer({
+            "id": "wmsLayer",
+            "type": "raster",
+            "source": "wmsLayer"
+          })
+        }
+      }
+    });
+  </script>
+</body>
+
+</html>

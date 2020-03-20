@@ -248,6 +248,28 @@
     color: antiquewhite;
     cursor: pointer;
   }
+  li {
+    float: left;
+    border: 1px solid forestgreen;
+    padding: 5px 8px;
+    margin: 0;
+    list-style: none;
+    cursor: pointer;
+    &.active {
+      background-color: forestgreen;
+      color: white;
+    }
+    &:first-child {
+      border-top-left-radius: 4px;
+      border-bottom-left-radius: 4px;
+      border-right: none;
+    }
+    &:last-child {
+      border-top-right-radius: 4px;
+      border-bottom-right-radius: 4px;
+      border-left: none;
+    }
+  }
 }
 
 $black65: rgba(0, 0, 0, 0.65);
