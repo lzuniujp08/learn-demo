@@ -39,10 +39,10 @@
             "version": 8,
             "name": "Dark",
             "sources": {
-              "XYZTile": {
+              "wmsLayer": {
                 "type": "raster",
-                "tiles": ['http://webrd01.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&lang=zh_cn&size=1&scale=1&style=8'],
-                "tileSize": 256,
+                "tiles": ['http://39.106.122.204:8086/geoserver/railway/wms?service=WMS&version=1.1.0&request=GetMap&layers=railway:layer_base&styles=&bbox={bbox-epsg-3857}&width=256&height=256&srs=EPSG:3857&format=image/png&TRANSPARENT=TRUE'],
+                "tileSize": 256
               }
             },
             "sprite": "mapbox://sprites/mapbox/dark-v9",
@@ -51,15 +51,13 @@
                 "id": "background",
                 "type": "background",
                 "paint": {
-                  "background-color": "#111"
+                  "background-color": "#ffffff"
                 }
               },
               {
-                "id": "XYZTile",
+                "id": "wmsLayer",
                 "type": "raster",
-                "source": "XYZTile",
-                "minzoom": 0,
-                "maxzoom": 22
+                "source": "wmsLayer"
               }
             ]
           };
@@ -76,13 +74,15 @@
 
           map.on('load', function() {
             that.popup = new mapboxgl.Popup({
-              closeButton: true,
+              closeButton: false,
               closeOnClick: false,
-              className: 'my-popup'
+              className: 'my-popup',
+              offset: [0, -15],
+              anchor: 'bottom'
             });
-            map.loadImage('../css/lightning.png', function(error, image) {
+            map.loadImage('../css/weather.png', function(error, image) {
               if (error) throw error;
-              map.addImage('lightning', image);
+              map.addImage('weather', image);
               that.addMarkers();
             });
           });
@@ -95,22 +95,14 @@
             };
             for (var i = 0; i < res.length; i++) {
               const r = res[i];
-              const ele = document.createElement('div');
-              ele.setAttribute('class', 'map-label');
-              ele.innerHTML = r.name;
-              const option = {
-                element: ele,
-                anchor: 'bottom',
-                offset: [0, -10]
-              }
               geojson.features.push({
                 type: 'Feature',
                 geometry: {
                   type: 'Point',
-                  coordinates: [r.lon, r.lat],
-                  properties: {
-                    name: r.name
-                  }
+                  coordinates: [r.lon, r.lat]
+                },
+                properties: {
+                  name: r.name
                 }
               });
             }
@@ -138,11 +130,15 @@
         },
         showInfo(feature) {
           var coordinates = feature.geometry.coordinates.slice();
+          var cityNamme = feature.properties.name;
           var description = `
-            <h5>2020-02-19</h1>
+            <h5>${cityNamme}</h1>
             <ul>
               <li>温度： 20℃</li>
               <li>湿度： 52%</li>
+              <li>降水： 1mm</li>
+              <li>风速： 4m/s</li>
+              <li>风向： 无持续风向</li>
             </ul>
           `;
           that.popup.setLngLat(coordinates)
@@ -159,11 +155,12 @@
             'type': 'symbol',
             'source': 'points',
             'layout': {
-              'icon-image': 'lightning',
-              'icon-size': 0.45,
+              'icon-image': 'weather',
+              'icon-size': 1,
               'text-field': ['get', 'name'],
-              'text-offset': [0, 0],
-              'text-anchor': 'bottom'
+              'text-offset': [0, 1],
+              'text-anchor': 'top',
+              'text-size': 12
             }
           });
         }
