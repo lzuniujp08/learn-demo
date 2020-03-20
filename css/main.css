@@ -244,10 +244,11 @@ ul {
     cursor: pointer; }
 
 .map-label {
-  background-color: rgba(255, 255, 255, 0.65);
+  background-color: rgba(0, 0, 0, 0.65);
   border-radius: 5px;
   padding: 2px 5px;
-  font-size: 12px; }
+  font-size: 12px;
+  color: antiquewhite; }
   .map-label:after {
     top: 100%;
     border: solid transparent;
@@ -257,8 +258,23 @@ ul {
     position: absolute;
     pointer-events: none; }
   .map-label:after {
-    border-top-color: rgba(255, 255, 255, 0.65);
+    border-top-color: rgba(0, 0, 0, 0.65);
     border-width: 5px;
     left: calc(50% - 5px); }
+
+.my-popup {
+  color: white; }
+  .my-popup .mapboxgl-popup-content {
+    background-color: rgba(0, 0, 0, 0.65);
+    margin: 0;
+    padding: 5px;
+    white-space: nowrap;
+    font-size: 12px; }
+    .my-popup .mapboxgl-popup-content h5 {
+      margin: 0;
+      padding: 0;
+      font-size: 14px; }
+  .my-popup .mapboxgl-popup-tip {
+    border-top-color: rgba(0, 0, 0, 0.65) !important; }
 
 /*# sourceMappingURL=main.css.map */

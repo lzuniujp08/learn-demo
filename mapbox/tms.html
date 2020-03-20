@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title>白天不懂夜的黑</title>
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="stylesheet" href="../css/main.css">
+  <link href="lib/mapbox-gl.css" rel="stylesheet" />
+</head>
+
+<body>
+  <div id="app">
+    <div id="map"></div>
+  </div>
+  <script src="lib/mapbox-gl.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+  <script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+  <script>
+    var that, map;
+
+    var app = new Vue({
+      el: '#app',
+      data: {},
+      mounted: function() {
+        that = this;
+        that.initMap();
+      },
+      methods: {
+        initMap: function() {
+          const token = 'pk.eyJ1IjoibHp1bml1anAwOCIsImEiOiJjam5iZmZwamMwN3RnM2twOHByeHJ4NzJoIn0.IVVIcCdRmFQE8-nQF-8wTA';
+          mapboxgl.accessToken = token;
+
+          var map = new mapboxgl.Map({
+            container: 'map',
+            zoom: 15,
+            center: [116.3911, 39.9168],
+            style: 'mapbox://styles/mapbox/light-v10'
+          });
+          map.on('load', function() {
+            map.addSource('gugong', {
+              'type': 'raster',
+              'scheme': 'tms',
+              'tiles': ['http://localhost:8086/geoserver/gwc/service/tms/1.0.0/jtmet%3Agugong@EPSG%3A900913@png/{z}/{x}/{y}.png']
+            });
+
+            map.addLayer({
+              'id': 'gugong',
+              "type": "raster",
+              'source': 'gugong'
+            });
+          });
+        }
+      }
+    });
+  </script>
+</body>
+
+</html>
