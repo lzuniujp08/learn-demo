@@ -273,6 +273,7 @@
 }
 
 $black65: rgba(0, 0, 0, 0.65);
+$white65: rgba(255, 255, 255, 0.65);
 
 .map-label {
   background-color: $black65;
@@ -293,6 +294,28 @@ $black65: rgba(0, 0, 0, 0.65);
     border-top-color: $black65;
     border-width: 5px;
     left: calc(50% - 5px);
+  }
+}
+
+.typhoon-label {
+  background-color: $white65;
+  border-radius: 5px;
+  padding: 2px 5px;
+  font-size: 12px;
+  color: black;
+  &:after {
+    top: 6px;
+		border: solid transparent;
+		content: " ";
+		height: 0;
+		width: 0;
+		position: absolute;
+		pointer-events: none;
+  }
+  &:after {
+    border-right-color: $white65;
+    border-width: 5px;
+    left: -10px;
   }
 }
 
