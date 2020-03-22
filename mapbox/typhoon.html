@@ -137,6 +137,7 @@
         playTyphoon() {
           var tfbh = that.typhoonPlay;
           var index = that.typhoonData[tfbh]['playIndex'];
+          // 台风风圈
           map.setPaintProperty(
             'circle-layer-' + tfbh,
             'fill-opacity',
@@ -148,8 +149,21 @@
               0
             ]
           );
+          // 实况线
           map.setPaintProperty(
-            'path-layer-' + tfbh,
+            'path-layer-live-' + tfbh,
+            'line-opacity',
+            [
+              'match',
+              ['get', 'index'],
+              index,
+              0.65,
+              0
+            ]
+          );
+          // 预报线
+          map.setPaintProperty(
+            'path-layer-forc-' + tfbh,
             'line-opacity',
             [
               'match',
@@ -166,8 +180,8 @@
             [
               'step',
               ['get', 'index'],
-              index + 0.1,
               1,
+              index + 0.1,
               0
             ]
           );
@@ -378,7 +392,11 @@
         },
         addTyphoonPath(data) {
           var points = data.points;
-          var geojson = {
+          var geojsonLive = {
+            'type': 'FeatureCollection',
+            'features': []
+          };
+          var geojsonForc = {
             'type': 'FeatureCollection',
             'features': []
           };
@@ -386,7 +404,7 @@
           for (var i = 1; i < points.length; i++) {
             var p = points[i];
             pts.push([p.longitude, p.latitude]);
-            geojson.features.push({
+            geojsonLive.features.push({
               type: 'Feature',
               geometry: {
                 type: 'LineString',
@@ -405,7 +423,7 @@
               var _fp = _points[j];
               _pts.push([_fp.longitude, _fp.latitude]);
             }
-            geojson.features.push({
+            geojsonForc.features.push({
               type: 'Feature',
               geometry: {
                 type: 'LineString',
@@ -417,36 +435,34 @@
               }
             });
           }
-          map.addSource('path-source-' + data.tfbh , {
+          // 实况线
+          map.addSource('path-source-live-' + data.tfbh , {
             type: 'geojson',
-            data: geojson
+            data: geojsonLive
           });
           map.addLayer({
-            id: 'path-layer-' + data.tfbh,
+            id: 'path-layer-live-' + data.tfbh,
             type: 'line',
-            source: 'path-source-' + data.tfbh,
+            source: 'path-source-live-' + data.tfbh,
             paint: {
-              'line-color': [
-                'match',
-                ['get', 'type'],
-                'live',
-                'rgba(0, 0, 0, .3)',
-                '#ec5d72'
-              ],
-              'line-width': [
-                'match',
-                ['get', 'type'],
-                'live',
-                3,
-                1
-              ]
-              // 'line-dasharray': [
-              //   'match',
-              //   ['get', 'type'],
-              //   'live',
-              //   ['literal', [0, 0]],
-              //   ['literal', [5, 3]]
-              // ]
+              'line-color': '#ffffff',
+              'line-width': 3
+            }
+          });
+
+          // 预报线
+          map.addSource('path-source-forc-' + data.tfbh , {
+            type: 'geojson',
+            data: geojsonForc
+          });
+          map.addLayer({
+            id: 'path-layer-forc-' + data.tfbh,
+            type: 'line',
+            source: 'path-source-forc-' + data.tfbh,
+            paint: {
+              'line-color': '#ec5d72',
+              'line-width': 1,
+              'line-dasharray': [5, 3]
             }
           });
         },
