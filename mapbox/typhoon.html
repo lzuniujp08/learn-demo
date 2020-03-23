@@ -18,6 +18,30 @@
         {{ isplay > 0 ? '暂停' : '播放' }}
       </button>
     </div>
+    <ul class="typhoon-legend">
+      <li style="padding-bottom: 5px;font-weight: bold;">
+        台风图例
+      </li>
+      <li
+        v-for="(value, key) in colorDict"
+        :key="key">
+        <span
+          class="color-circle"
+          :style="{background: value}"></span>
+        {{ key }}
+      </li>
+      <li style="padding: 5px 0;font-weight: bold;">
+        预报机构
+      </li>
+      <li
+        v-for="(value, key) in lineColorDict"
+        :key="key">
+        <span
+          class="color-line"
+          :style="{borderColor: value}"></span>
+        {{ key }}
+      </li>
+    </ul>
     <div id="map"></div>
   </div>
   <script src="lib/mapbox-gl.js"></script>
@@ -33,15 +57,53 @@
         typhoonList: [],
         typhoonData: {},
         isplay: true,
-        typhoonPlay: ''
+        typhoonPlay: '',
+        popup: null,
+        colorDict: {
+          '热带低压(TD)': '#20f634',
+          '热带风暴(TS)': '#2078fd',
+          '强热带风暴(STS)': '#eaf232',
+          '台风(TY)': '#eab434',
+          '强台风(STY)': '#e085f7',
+          '超强台风(Super TY)': '#ea2a34'
+        },
+        lineColorDict: {
+          '中国': '#ec5d72',
+          '中国香港': '#ec7cfe',
+          '中国台湾': '#ecaa65',
+          '日本': '#56f66e',
+          '美国': '#53dbfe',
+          '韩国': '#72a4ac',
+          '欧洲': '#4c54a6'
+        }
       },
       mounted: function() {
         that = this;
         that.initMap();
+        Date.prototype.format = function(fmt) {
+          var o = {
+            "M+": this.getMonth() + 1, //月份
+            "d+": this.getDate(), //日
+            "h+": this.getHours(), //小时
+            "m+": this.getMinutes(), //分
+            "s+": this.getSeconds(), //秒
+            "q+": Math.floor((this.getMonth() + 3) / 3), //季度
+            "S": this.getMilliseconds() //毫秒
+          };
+          if (/(y+)/.test(fmt)) {
+            fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
+          }
+          for (var k in o) {
+            if (new RegExp("(" + k + ")").test(fmt)) {
+              fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+            }
+          }
+          return fmt;
+        };
       },
       watch: {
         isplay(val) {
-          if(val) {
+          if (val) {
             that.play();
           } else {
             that.stop();
@@ -62,16 +124,13 @@
                 "tileSize": 256
               }
             },
-            "sprite": "mapbox://sprites/mapbox/dark-v9",
-            "glyphs": "mapbox://fonts/mapbox/{fontstack}/{range}.pbf",
             "layers": [{
-                "id": "XYZTile",
-                "type": "raster",
-                "source": "XYZTile",
-                "minzoom": 0,
-                "maxzoom": 22
-              }
-            ]
+              "id": "XYZTile",
+              "type": "raster",
+              "source": "XYZTile",
+              "minzoom": 0,
+              "maxzoom": 22
+            }]
           };
 
           map = new mapboxgl.Map({
@@ -79,20 +138,126 @@
             maxZoom: 18,
             minZoom: 0,
             zoom: 4,
-            center: {lng: 130.57117406250381, lat: 10.03303117944246},
+            center: {
+              lng: 130.5711,
+              lat: 10.03303
+            },
             style: mapStyle,
             attributionControl: false
           });
-          let firstInit = true;
+
           map.on('load', function() {
+            that.popup = new mapboxgl.Popup({
+              closeButton: false,
+              closeOnClick: false,
+              className: 'my-popup',
+              offset: [0, -10],
+              anchor: 'bottom'
+            });
             that.getTyphoonData();
           });
         },
+        addMapEvent() {
+          map.on('mouseenter', 'points-layer-live-' + that.typhoonPlay, function(e) {
+            map.getCanvas().style.cursor = 'pointer';
+            that.showPointInfo(e.features[0]);
+          });
+          map.on('mouseenter', 'points-layer-forc-' + that.typhoonPlay, function(e) {
+            map.getCanvas().style.cursor = 'pointer';
+            that.showPointInfo(e.features[0]);
+          });
+
+          map.on('click', 'points-layer-live-' + that.typhoonPlay, function(e) {
+            var feature = e.features[0];
+            var properties = feature.properties;
+            that.typhoonData[properties.tfbh]['playIndex'] = properties.index;
+            that.stop();
+            that.playTyphoon();
+          });
+
+          map.on('mouseleave', 'points-layer-live-' + that.typhoonPlay, function(e) {
+            map.getCanvas().style.cursor = '';
+            that.popup.remove();
+          });
+          map.on('mouseleave', 'points-layer-forc-' + that.typhoonPlay, function(e) {
+            map.getCanvas().style.cursor = '';
+            that.popup.remove();
+          });
+        },
+        getPointColor(strong) {
+          return that.colorDict[strong];
+        },
+        showPointInfo(feature) {
+          var coordinates = feature.geometry.coordinates.slice();
+          var properties = feature.properties;
+          var date = new Date(properties.time).format('MM月dd日 hh:mm');
+          var lon = properties.longitude, lat = properties.latitude;
+          var strong = properties.strong;
+          var speed = properties.speed;
+          var move_dir = properties.move_dir;
+          var move_speed = properties.move_speed;
+          var pressure = properties.pressure;
+          var color = that.getPointColor(strong);
+          var typhoonLabel = properties.typhoonLabel;
+
+          var circle7 = '';
+          var circle10 = '';
+          var circle12 = '';
+          // 风圈数据处理
+          if(properties.radius7 && properties.radius7 > 0) {
+            var radius7_quad = JSON.parse(properties.radius7_quad);
+            var radius10_quad = JSON.parse(properties.radius10_quad);
+            var radius12_quad = JSON.parse(properties.radius12_quad);
+            var radius7 = [], radius10 = [], radius12 = [];
+            for(var key in radius7_quad) {
+              radius7.push(radius7_quad[key]);
+            }
+            for(var key in radius10_quad) {
+              radius10.push(radius10_quad[key]);
+            }
+            for(var key in radius12_quad) {
+              radius12.push(radius12_quad[key]);
+            }
+            radius7 = radius7.sort((a, b) => {
+              return a - b;
+            })
+            radius10 = radius10.sort((a, b) => {
+              return a - b;
+            })
+            radius12 = radius12.sort((a, b) => {
+              return a - b;
+            })
+            circle7 = radius7[0] === radius7[3] ? radius7[0] : radius7[0] + '—' + radius7[3];
+            circle10 = radius10[0] === radius10[3] ? radius10[0] : radius10[0] + '—' + radius10[3];
+            circle12 = radius12[0] === radius12[3] ? radius12[0] : radius12[0] + '—' + radius12[3];
+          }
+          var description = `
+            <h5>${typhoonLabel}</h5>
+            <ul>
+              <li><label>过去时间：</label> ${date}</li>
+              <li><label>中心位置：</label> ${lat}N, ${lon}E</li>
+              <li><label>风速：</label> ${speed}米/秒</li>
+              <li><label>气压：</label> ${pressure}百帕</li>`;
+          if (move_speed && move_speed > 0) {
+            description += `
+              <li><label>移速：</label> ${move_speed}米/秒</li>
+              <li><label>移向：</label> ${move_dir}</li>
+              <li><label>7级风圈：</label> ${circle7}公里</li>
+              <li><label>10级风圈：</label> ${circle10}公里</li>
+              <li><label>12级风圈：</label> ${circle12}公里</li>
+            `;
+          }
+          description += '</ul>';
+          ;
+          that.popup.setLngLat(coordinates)
+            .setHTML(description)
+            .addTo(map);
+        },
         getTyphoonData() {
           $.get('../data/201929.json', function(res) {
-            console.log(res);
             that.typhoonList = res;
             that.addTyphoon(res[0]);
+            that.addMapEvent();
           })
         },
         addTyphoon(data) {
@@ -115,7 +280,7 @@
           that.addTyphoonPoints(data);
 
           //5、播放
-          that.playTyphoon(data);
+          that.playTyphoon();
           that.play();
         },
         play() {
@@ -123,7 +288,7 @@
           that.typhoonData[tfbh]['playFlag'] = setInterval(function() {
             that.typhoonData[tfbh]['playIndex']++;
             var len = that.typhoonData[tfbh]['data']['points'].length;
-            if(that.typhoonData[tfbh]['playIndex'] === len) {
+            if (that.typhoonData[tfbh]['playIndex'] === len) {
               that.stop();
             } else {
               that.playTyphoon();
@@ -144,8 +309,7 @@
             [
               'match',
               ['get', 'index'],
-              index,
-              0.2,
+              index, 0.2,
               0
             ]
           );
@@ -156,8 +320,7 @@
             [
               'match',
               ['get', 'index'],
-              index,
-              0.65,
+              index, 0.65,
               0
             ]
           );
@@ -168,32 +331,29 @@
             [
               'match',
               ['get', 'index'],
-              index,
-              1,
+              index, 1,
               0
             ]
           );
           // 实况点
           map.setPaintProperty(
             'points-layer-live-' + tfbh,
-            'circle-opacity',
+            'circle-radius',
             [
               'step',
               ['get', 'index'],
-              1,
-              index + 0.1,
+              6, index + 0.1,
               0
             ]
           );
           // 预报点
           map.setPaintProperty(
             'points-layer-forc-' + tfbh,
-            'circle-opacity',
+            'circle-radius',
             [
               'match',
               ['get', 'index'],
-              index,
-              1,
+              index, 6,
               0
             ]
           );
@@ -208,7 +368,7 @@
             var p = points[i];
             var center = [p.longitude, p.latitude];
             // 7级风圈
-            if(p.radius7 > 0) {
+            if (p.radius7 > 0) {
               var coords = that.getCircleCoords(center, p.radius7_quad);
               geojson.features.push({
                 type: 'Feature',
@@ -223,7 +383,7 @@
               });
             }
             // 10级风圈
-            if(p.radius10 > 0) {
+            if (p.radius10 > 0) {
               var coords = that.getCircleCoords(center, p.radius10_quad);
               geojson.features.push({
                 type: 'Feature',
@@ -238,7 +398,7 @@
               });
             }
             // 12级风圈
-            if(p.radius12 > 0) {
+            if (p.radius12 > 0) {
               var coords = that.getCircleCoords(center, p.radius12_quad);
               geojson.features.push({
                 type: 'Feature',
@@ -253,7 +413,7 @@
               });
             }
           }
-          map.addSource('circle-source-' + data.tfbh , {
+          map.addSource('circle-source-' + data.tfbh, {
             type: 'geojson',
             data: geojson
           });
@@ -265,21 +425,17 @@
               'fill-color': [
                 'match',
                 ['get', 'radius'],
-                '7',
-                '#00bab2',
-                '10',
-                '#ffff00',
-                '#da7341'
+                '7', '#00bab2',
+                '10', '#ffff00',
+                '#da7341' // other
               ],
               'fill-opacity': 0.2,
               'fill-outline-color': [
                 'match',
                 ['get', 'radius'],
-                '7',
-                '#00bab2',
-                '10',
-                '#ffff00',
-                '#da7341'
+                '7', '#00bab2',
+                '10', '#ffff00',
+                '#da7341' // other
               ]
             }
           });
@@ -323,6 +479,8 @@
           for (var i = 0; i < points.length; i++) {
             var p = points[i];
             p.index = i;
+            p.typhoonLabel = data.tfbh + data.name;
+            p.tfbh = data.tfbh;
             geojsonLive.features.push({
               type: 'Feature',
               geometry: {
@@ -332,42 +490,54 @@
               properties: p
             });
             // 预报点
-            var forcPoints = p.forecast[0]['points'];
-            for(var j = 0; j < forcPoints.length; j++) {
-              var _p = forcPoints[j];
-              _p.index = i;
-              geojsonForc.features.push({
-                type: 'Feature',
-                geometry: {
-                  type: 'Point',
-                  coordinates: [_p.longitude, _p.latitude]
-                },
-                properties: _p
-              });
+            var forecast = p.forecast;
+            for(var k = 0; k < forecast.length; k++) {
+              var forcPoints = p.forecast[k]['points'];
+              for (var j = 0; j < forcPoints.length; j++) {
+                var _p = forcPoints[j];
+                _p.index = i;
+                _p.typhoonLabel = data.tfbh + data.name;
+                geojsonForc.features.push({
+                  type: 'Feature',
+                  geometry: {
+                    type: 'Point',
+                    coordinates: [_p.longitude, _p.latitude]
+                  },
+                  properties: _p
+                });
+              }
             }
           }
-
+          // var paint = {
+          //   'circle-color': [
+          //     'case',
+          //     ['<', ['get', 'speed'], 10.8], 'rgba(0,0,0,0)', //<10.8
+          //     ['<', ['get', 'speed'], 17.2], 'rgba(153, 255, 153, .9)', //>=10.8 & <17.2
+          //     ['<', ['get', 'speed'], 24.5], 'rgba(102, 204, 255, .9)',
+          //     ['<', ['get', 'speed'], 32.7], 'rgba(255, 255, 102, .9)',
+          //     ['<=', ['get', 'speed'], 41.5], 'rgba(253, 139, 0, .9)',
+          //     ['<=', ['get', 'speed'], 50.1], 'rgba(255, 51, 0, .9)',
+          //     'rgba(255, 0, 255, .9)' // 默认值
+          //   ],
+          //   'circle-radius': 6,
+          //   'circle-stroke-width': 0
+          // }
+          var circleColor = [
+            'match',
+            ['get', 'strong']
+          ];
+          for(var key in that.colorDict) {
+            circleColor.push(key);
+            circleColor.push(that.colorDict[key]);
+          }
+          circleColor.push('rgba(0,0,0,0)');
           var paint = {
-            'circle-color': [
-              'step',
-              ['get', 'speed'],
-              'rgba(153, 255, 153, .9)',
-              17.2,
-              'rgba(102, 204, 255, .9)',
-              24.5,
-              'rgba(255, 255, 102, .9)',
-              32.7,
-              'rgba(253, 139, 0, .9)',
-              41.5,
-              'rgba(255, 51, 0, .9)',
-              50.1,
-              'rgba(255, 0, 255, .9)'
-            ],
+            'circle-color': circleColor,
             'circle-radius': 6,
             'circle-stroke-width': 0
           }
           // 实况点
-          map.addSource('points-source-live-' + data.tfbh , {
+          map.addSource('points-source-live-' + data.tfbh, {
             type: 'geojson',
             data: geojsonLive
           });
@@ -379,7 +549,7 @@
           });
 
           // 预报点
-          map.addSource('points-source-forc-' + data.tfbh , {
+          map.addSource('points-source-forc-' + data.tfbh, {
             type: 'geojson',
             data: geojsonForc
           });
@@ -400,7 +570,9 @@
             'type': 'FeatureCollection',
             'features': []
           };
-          var pts =[[points[0].longitude, points[0].latitude]];
+          var pts = [
+            [points[0].longitude, points[0].latitude]
+          ];
           for (var i = 1; i < points.length; i++) {
             var p = points[i];
             pts.push([p.longitude, p.latitude]);
@@ -417,26 +589,32 @@
             });
             // 预报路径
             var _p = points[i - 1];
-            var _pts = [[_p.longitude, _p.latitude]];
-            var _points = _p.forecast[0]['points'];
-            for(var j = 0;j < _points.length; j++) {
-              var _fp = _points[j];
-              _pts.push([_fp.longitude, _fp.latitude]);
-            }
-            geojsonForc.features.push({
-              type: 'Feature',
-              geometry: {
-                type: 'LineString',
-                coordinates: _pts
-              },
-              properties: {
-                index: i - 1,
-                type: 'forc'
+            var forecast = _p.forecast;
+            for(var k = 0; k < forecast.length; k++) {
+              var _pts = [
+                [_p.longitude, _p.latitude]
+              ];
+              var _points = forecast[k]['points'];
+              for (var j = 0; j < _points.length; j++) {
+                var _fp = _points[j];
+                _pts.push([_fp.longitude, _fp.latitude]);
               }
-            });
+              geojsonForc.features.push({
+                type: 'Feature',
+                geometry: {
+                  type: 'LineString',
+                  coordinates: _pts
+                },
+                properties: {
+                  index: i - 1,
+                  type: 'forc',
+                  sets: forecast[k]['sets']
+                }
+              });
+            }
           }
           // 实况线
-          map.addSource('path-source-live-' + data.tfbh , {
+          map.addSource('path-source-live-' + data.tfbh, {
             type: 'geojson',
             data: geojsonLive
           });
@@ -451,16 +629,25 @@
           });
 
           // 预报线
-          map.addSource('path-source-forc-' + data.tfbh , {
+          map.addSource('path-source-forc-' + data.tfbh, {
             type: 'geojson',
             data: geojsonForc
           });
+          var lineColor = [
+            'match',
+            ['get', 'sets']
+          ];
+          for(var key in that.lineColorDict) {
+            lineColor.push(key);
+            lineColor.push(that.lineColorDict[key]);
+          }
+          lineColor.push('rgba(0,0,0,0)');
           map.addLayer({
             id: 'path-layer-forc-' + data.tfbh,
             type: 'line',
             source: 'path-source-forc-' + data.tfbh,
             paint: {
-              'line-color': '#ec5d72',
+              'line-color': lineColor,
               'line-width': 1,
               'line-dasharray': [5, 3]
             }
