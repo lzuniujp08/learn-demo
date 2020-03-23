@@ -154,7 +154,104 @@
               offset: [0, -10],
               anchor: 'bottom'
             });
+            that.addWarnLine();
             that.getTyphoonData();
+          });
+        },
+        addWarnLine() {
+          const warnLineData = [
+            {
+              "color": "blue",
+              "weight": 1,
+              "opacity": 0.8,
+              "dashArray": 0,
+              "points": [
+                [
+                  105,
+                  0,
+
+                ],
+                [
+                  113,
+                  4.5
+
+                ],
+                [
+                  119,
+                  11
+                ],
+                [
+                  119,
+                  18
+                ],
+                [
+                  127,
+                  22
+                ],
+                [
+                  127,
+                  34
+                ]
+              ]
+            },
+            {
+              "color": "green",
+              "weight": 1,
+              "opacity": 0.8,
+              "dashArray": [10, 5],
+              "points": [
+                [
+                  105,
+                  0
+                ],
+                [
+                  120,
+                  0
+                ],
+                [
+                  132,
+                  15
+                ],
+                [
+                  132,
+                  34
+                ]
+              ]
+            }
+          ];
+          var geojson = {
+            'type': 'FeatureCollection',
+            'features': []
+          };
+          for(var i = 0; i < warnLineData.length;i++) {
+            var d = warnLineData[i];
+            geojson.features.push({
+              type: 'Feature',
+              geometry: {
+                type: 'LineString',
+                coordinates: d.points
+              },
+              properties: d
+            });
+          }
+          map.addSource('warn-line', {
+            type: 'geojson',
+            data: geojson
+          });
+          map.addLayer({
+            id: 'warn-line',
+            type: 'line',
+            source: 'warn-line',
+            paint: {
+              'line-color': [
+                'match',
+                ['get', 'color'],
+                'blue', 'blue',
+                'green'
+              ],
+              'line-width': 2,
+              'line-dasharray': [5, 3]
+            }
           });
         },
         addMapEvent() {
@@ -256,17 +353,22 @@
         getTyphoonData() {
           $.get('../data/201929.json', function(res) {
             that.typhoonList = res;
-            that.addTyphoon(res[0]);
+            for(var i = 0; i < res.length; i++) {
+              var r = res[i];
+              that.typhoonData[r.tfbh] = {
+                data: r,
+                playFlag: 0,
+                playIndex: 0
+              };
+            }
+            that.addTyphoon(res[0].tfbh);
             that.addMapEvent();
           })
         },
-        addTyphoon(data) {
-          that.typhoonData[data.tfbh] = {
-            data: data,
-            playFlag: 0,
-            playIndex: 0
-          };
-          that.typhoonPlay = data.tfbh;
+        addTyphoon(tfbh) {
+          that.typhoonPlay = tfbh;
+          var data = that.typhoonData[tfbh].data;
+
           // 1、添加台风标签
           that.addTyphoonLabel(data);
 

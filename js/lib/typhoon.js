@@ -38,7 +38,8 @@ var Typhoon = function(map) {
     };
 
     that.addWarnLine = function() {
-      const warnLineData = [{
+      const warnLineData = [
+        {
           "color": "blue",
           "weight": 1,
           "opacity": 0.8,
