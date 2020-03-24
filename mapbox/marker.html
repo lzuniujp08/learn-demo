@@ -117,7 +117,9 @@
                 anchor: 'bottom',
                 offset: [0, -10]
               }
-              var marker = new mapboxgl.Marker(option).setLngLat([r.lon, r.lat]).addTo(map);
+              var marker = new mapboxgl.Marker(option)
+                .setLngLat([r.lon, r.lat])
+                .addTo(map);
               that.markers.push(marker);
 
               geojson.features.push({
