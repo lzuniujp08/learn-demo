@@ -15,11 +15,14 @@
   <div id="app">
     <div id="map"></div>
     <div class="layers-panel">
+      <label>{{ dates[current] }}</label>
+      <button @click="isplay = !isplay">{{ isplay ? '暂停': '播放' }}</button>
+      <br>
       <input
        type="range"
-       :min="min"
-       :max="max"
-       :step="step"
+       min="0"
+       :max="dates.length - 1"
+       step="1"
        v-model="current">
     </div>
   </div>
@@ -34,10 +37,10 @@
       el: '#app',
       data() {
         return {
-          min: 0,
-          max: 0,
-          step: 1000,
-          current: 0
+          dates: [],
+          current: 0,
+          isplay: false,
+          playFlag: 0
         }
       },
       mounted: function() {
@@ -66,8 +69,20 @@
       },
       watch: {
         current(val) {
-          val = Number(val);
-          map.setFilter('points', ['<=', 'time', val]);
+          map.setFilter('points', ['==', 'date', that.dates[val]]);
+        },
+        isplay(val) {
+          if(val) {
+            that.playFlag = setInterval(function() {
+              if(that.current === that.dates.length - 1) {
+                that.current = 0;
+              } else {
+                that.current++;
+              }
+            }, 1000);
+          } else {
+            window.clearInterval(that.playFlag);
+          }
         }
       },
       methods: {
@@ -98,7 +113,7 @@
             maxZoom: 18,
             minZoom: 0,
             zoom: 9,
-            center: [114.251702, 30.552128],
+            center: [116.33312, 39.74413],
             style: mapStyle,
             attributionControl: false
           });
@@ -107,9 +122,8 @@
           });
         },
         addDensity() {
-          $.get('../data/sfcars.csv', function(res) {
+          $.get('../data/path.csv', function(res) {
             var lines = res.split('\n');
-            lines.splice(0, 1);
             var geojson = {
               'type': 'FeatureCollection',
               'features': []
@@ -117,16 +131,16 @@
             console.time();
             for (var i = 0; i < lines.length - 1; i++) {
               const r = lines[i].split(',');
-              if(i===0) that.min = Number(r[2]);
-              if(i===lines.length - 2) that.max = Number(r[2]);
+              var date = r[0].substring(0, 10);
+              if(that.dates.indexOf(date) === -1) that.dates.push(date);
               geojson.features.push({
                 type: 'Feature',
                 geometry: {
                   type: 'Point',
-                  coordinates: [r[0], r[1]].map(Number)
+                  coordinates: [r[1], r[2]].map(Number)
                 },
                 properties: {
-                  time: Number(r[2])
+                  date: date
                 }
               });
             }
@@ -144,9 +158,9 @@
                 'circle-radius': 3,
                 'circle-color': 'rgba(255, 0, 0, 0.6)',
                 'circle-blur': 1
-              }
+              },
+              'filter': ['==', 'date', that.dates[0]]
             });
-            that.current = that.min;
           });
         }
       }
