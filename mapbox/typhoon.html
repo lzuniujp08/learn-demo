@@ -405,60 +405,15 @@
           var tfbh = that.typhoonPlay;
           var index = that.typhoonData[tfbh]['playIndex'];
           // 台风风圈
-          map.setPaintProperty(
-            'circle-layer-' + tfbh,
-            'fill-opacity',
-            [
-              'match',
-              ['get', 'index'],
-              index, 0.2,
-              0
-            ]
-          );
+          map.setFilter('circle-layer-' + tfbh, ['==', 'index', index]);
           // 实况线
-          map.setPaintProperty(
-            'path-layer-live-' + tfbh,
-            'line-opacity',
-            [
-              'match',
-              ['get', 'index'],
-              index, 0.65,
-              0
-            ]
-          );
+          map.setFilter('path-layer-live-' + tfbh, ['==', 'index', index]);
           // 预报线
-          map.setPaintProperty(
-            'path-layer-forc-' + tfbh,
-            'line-opacity',
-            [
-              'match',
-              ['get', 'index'],
-              index, 1,
-              0
-            ]
-          );
+          map.setFilter('path-layer-forc-' + tfbh, ['==', 'index', index]);
           // 实况点
-          map.setPaintProperty(
-            'points-layer-live-' + tfbh,
-            'circle-radius',
-            [
-              'step',
-              ['get', 'index'],
-              6, index + 0.1,
-              0
-            ]
-          );
+          map.setFilter('points-layer-live-' + tfbh, ['<=', 'index', index]);
           // 预报点
-          map.setPaintProperty(
-            'points-layer-forc-' + tfbh,
-            'circle-radius',
-            [
-              'match',
-              ['get', 'index'],
-              index, 6,
-              0
-            ]
-          );
+          map.setFilter('points-layer-forc-' + tfbh, ['==', 'index', index]);
         },
         addTyphoonCircle(data) {
           var points = data.points;

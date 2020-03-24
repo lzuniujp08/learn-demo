@@ -14,6 +14,34 @@
 <body>
   <div id="app">
     <div id="map"></div>
+    <div class="layers-panel">
+      <ul>
+        <li
+          v-for="(item, index) in layers"
+          :key="index"
+          class="parent">
+          <input
+           type="checkbox"
+           :value="item.code"
+           :checked="item.checked"
+           @click="checkedNode(item)">
+          {{ item.name }}
+          <ul>
+            <li
+              v-for="(_item, _index) in item.children"
+              :key="_index"
+              class="child">
+              <input
+               type="checkbox"
+               :value="_item.code"
+               :checked="_item.checked"
+               @click="checkedNode(_item)">
+              {{ _item.name }}
+            </li>
+          </ul>
+        </li>
+      </ul>
+    </div>
   </div>
   <script src="lib/mapbox-gl.js"></script>
   <!-- <script src="lib/geojson-vt.js"></script> -->
@@ -24,10 +52,45 @@
 
     var app = new Vue({
       el: '#app',
-      data: {},
+      data() {
+        return {
+          layers: [
+            {
+              name: 'points',
+              code: 'points',
+              checked: false,
+              children: [
+                {name: 1, code: 1, checked: true},
+                {name: 2, code: 2, checked: true},
+                {name: 3, code: 3, checked: false},
+                {name: 4, code: 4, checked: false},
+                {name: 5, code: 5, checked: false},
+                {name: 6, code: 6, checked: false}
+              ]
+            }
+          ],
+          checked: []
+        }
+      },
       mounted: function() {
         that = this;
         that.initMap();
+      },
+      watch: {
+        layers: {
+          handler(val) {
+            that.setLayerFilter();
+          },
+          deep: true
+        },
+        checked:{
+          handler(val) {
+            var filter = ["in", 'type']
+            filter = filter.concat(val);
+            map.setFilter('points', ['all', filter]);
+          },
+          deep: true
+        }
       },
       methods: {
         initMap: function() {
@@ -63,48 +126,59 @@
             attributionControl: false
           });
           map.on('load', function() {
-            that.addDensity();
+            that.addPoints();
           });
         },
-        addDensity() {
-          $.get('../data/sfcars.csv', function(res) {
-            var lines = res.split('\n');
-            lines.splice(0, 1);
-            var geojson = {
-              'type': 'FeatureCollection',
-              'features': []
-            };
-            console.time();
-            for (var i = 0; i < lines.length / 2; i++) {
-              const r = lines[i].split(',');
-              geojson.features.push({
-                type: 'Feature',
-                geometry: {
-                  type: 'Point',
-                  coordinates: [r[0], r[1]].map(Number)
-                },
-                properties: {
-                  value: r[2]
-                }
-              });
+        checkedNode(node) {
+          node.checked = !node.checked;
+          if(node.children) {
+            for(var i = 0; i < node.children.length;i++) {
+              var child = node.children[i];
+              child.checked = node.checked;
             }
-            console.timeEnd();
-            map.addSource('points', {
-              type: 'geojson',
-              data: geojson
-            });
-            map.addLayer({
-              'id': 'points',
-              'type': 'circle',
-              'source': 'points',
-              'minzoom': 9,
-              'paint': {
-                'circle-radius': 3,
-                'circle-color': 'rgba(255, 0, 0, 0.6)',
-                'circle-blur': 1
-              }
-            });
+          }
+        },
+        setLayerFilter() {
+          for(var i = 0;i<that.layers.length;i++) {
+            var children = that.layers[i].children;
+            var checked = [];
+            for(var j = 0;j<children.length;j++) {
+              var c = children[j];
+              if(c.checked) checked.push(c.code);
+            }
+            that.checked = checked;
+          }
+        },
+        addPoints() {
+          map.addSource('points',{
+              'type':'vector',
+              'scheme':'tms',
+              'tiles':['http://localhost:8086/geoserver/gwc/service/tms/1.0.0/jtmet%3Apoints@EPSG%3A900913@pbf/{z}/{x}/{y}.pbf']
           });
+
+          map.addLayer({
+            'id': 'points',
+            'type': 'circle',
+            'source': 'points',
+            'source-layer':'points',
+            'minzoom': 9,
+            'paint': {
+              'circle-radius': 3,
+              'circle-opacity': 0.8,
+              'circle-color': [
+                'match',
+                ['get', 'type'],
+                1, '#0098a3',
+                2, '#00ca8d',
+                3, '#37C508',
+                4, '#98f300',
+                5, '#efff85',
+                '#0098a3' // 无匹配值颜色
+              ],
+              'circle-blur': 0.8
+            }
+          });
+          that.checked = [1, 2];
         }
       }
     });

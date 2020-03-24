@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title>白天不懂夜的黑</title>
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="stylesheet" href="../css/main.css">
+  <link href="lib/mapbox-gl.css" rel="stylesheet" />
+</head>
+
+<body>
+  <div id="app">
+    <div id="map"></div>
+    <div class="layers-panel">
+      <input
+       type="range"
+       :min="min"
+       :max="max"
+       :step="step"
+       v-model="current">
+    </div>
+  </div>
+  <script src="lib/mapbox-gl.js"></script>
+  <!-- <script src="lib/geojson-vt.js"></script> -->
+  <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+  <script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+  <script>
+    var that, map;
+
+    var app = new Vue({
+      el: '#app',
+      data() {
+        return {
+          min: 0,
+          max: 0,
+          step: 1000,
+          current: 0
+        }
+      },
+      mounted: function() {
+        Date.prototype.format = function(fmt) {
+          var o = {
+            "M+": this.getMonth() + 1, //月份
+            "d+": this.getDate(), //日
+            "h+": this.getHours(), //小时
+            "m+": this.getMinutes(), //分
+            "s+": this.getSeconds(), //秒
+            "q+": Math.floor((this.getMonth() + 3) / 3), //季度
+            "S": this.getMilliseconds() //毫秒
+          };
+          if (/(y+)/.test(fmt)) {
+            fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
+          }
+          for (var k in o) {
+            if (new RegExp("(" + k + ")").test(fmt)) {
+              fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+            }
+          }
+          return fmt;
+        };
+        that = this;
+        that.initMap();
+      },
+      watch: {
+        current(val) {
+          val = Number(val);
+          map.setFilter('points', ['<=', 'time', val]);
+        }
+      },
+      methods: {
+        initMap: function() {
+          const token = 'pk.eyJ1IjoibHp1bml1anAwOCIsImEiOiJjam5iZmZwamMwN3RnM2twOHByeHJ4NzJoIn0.IVVIcCdRmFQE8-nQF-8wTA';
+          mapboxgl.accessToken = token;
+          var mapStyle = {
+            "version": 8,
+            "name": "Dark",
+            "sources": {
+              "XYZTile": {
+                "type": "raster",
+                "tiles": ['http://www.google.cn/maps/vt?lyrs=s@189&gl=cn&x={x}&y={y}&z={z}'],
+                "tileSize": 256
+              }
+            },
+            "layers": [{
+              "id": "XYZTile",
+              "type": "raster",
+              "source": "XYZTile",
+              "minzoom": 0,
+              "maxzoom": 22
+            }]
+          };
+
+          map = new mapboxgl.Map({
+            container: 'map',
+            maxZoom: 18,
+            minZoom: 0,
+            zoom: 9,
+            center: [114.251702, 30.552128],
+            style: mapStyle,
+            attributionControl: false
+          });
+          map.on('load', function() {
+            that.addDensity();
+          });
+        },
+        addDensity() {
+          $.get('../data/sfcars.csv', function(res) {
+            var lines = res.split('\n');
+            lines.splice(0, 1);
+            var geojson = {
+              'type': 'FeatureCollection',
+              'features': []
+            };
+            console.time();
+            for (var i = 0; i < lines.length - 1; i++) {
+              const r = lines[i].split(',');
+              if(i===0) that.min = Number(r[2]);
+              if(i===lines.length - 2) that.max = Number(r[2]);
+              geojson.features.push({
+                type: 'Feature',
+                geometry: {
+                  type: 'Point',
+                  coordinates: [r[0], r[1]].map(Number)
+                },
+                properties: {
+                  time: Number(r[2])
+                }
+              });
+            }
+            console.timeEnd();
+
+            map.addSource('points', {
+              type: 'geojson',
+              data: geojson
+            });
+            map.addLayer({
+              'id': 'points',
+              'type': 'circle',
+              'source': 'points',
+              'paint': {
+                'circle-radius': 3,
+                'circle-color': 'rgba(255, 0, 0, 0.6)',
+                'circle-blur': 1
+              }
+            });
+            that.current = that.min;
+          });
+        }
+      }
+    });
+  </script>
+</body>
+
+</html>
