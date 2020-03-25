@@ -29,6 +29,10 @@
       bearing: -17.6,
       antialias: true
     });
+    map.addControl(new mapboxgl.NavigationControl({
+      showCompass: true,
+      visualizePitch: true
+    }), 'bottom-right');
     map.on('load', function() {
         map.addSource('building',{
           type: 'geojson',
@@ -40,16 +44,17 @@
             'source': 'building',
             'type': 'fill-extrusion',
             'paint': {
-                'fill-extrusion-color': [
-                    'interpolate',
-                    ['linear'],
-                    ['get', 'height'],
-                    0, 'rgba(255,255,191, 0.65)',
-                    50, 'rgba(253,174,97, 0.65)',
-                    100, "rgba(215,25,28, 0.65)",
-                ],
+                // 'fill-extrusion-color': [
+                //     'interpolate',
+                //     ['linear'],
+                //     ['get', 'height'],
+                //     0, 'rgba(255,255,191, 0.65)',
+                //     50, 'rgba(253,174,97, 0.65)',
+                //     100, "rgba(215,25,28, 0.65)",
+                // ],
+                'fill-extrusion-color': '#ccc',
                 'fill-extrusion-height': ['get', 'height'],
-                'fill-extrusion-opacity': .8
+                'fill-extrusion-opacity': .6
             }
         });
     });
