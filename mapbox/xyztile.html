@@ -30,8 +30,6 @@
       },
       methods: {
         initMap: function() {
-          const token = 'pk.eyJ1IjoibHp1bml1anAwOCIsImEiOiJjam5iZmZwamMwN3RnM2twOHByeHJ4NzJoIn0.IVVIcCdRmFQE8-nQF-8wTA';
-          mapboxgl.accessToken = token;
           var mapStyle = {
             "version": 8,
             "name": "Dark",
@@ -42,8 +40,6 @@
                 "tileSize": 256
               }
             },
-            "sprite": "mapbox://sprites/mapbox/dark-v9",
-            "glyphs": "mapbox://fonts/mapbox/{fontstack}/{range}.pbf",
             "layers": [{
                 "id": "XYZTile",
                 "type": "raster",
