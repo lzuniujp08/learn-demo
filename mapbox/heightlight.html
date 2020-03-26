@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title>白天不懂夜的黑</title>
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="stylesheet" href="../css/main.css">
+  <link href="lib/mapbox-gl.css" rel="stylesheet" />
+</head>
+
+<body>
+  <div id="app">
+    <div id="map"></div>
+    <div class="layers-panel">
+      <input type="text" v-model="showCity">
+    </div>
+  </div>
+  <script src="lib/mapbox-gl.js"></script>
+  <!-- <script src="lib/geojson-vt.js"></script> -->
+  <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+  <script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+  <script>
+    var that, map;
+
+    var app = new Vue({
+      el: '#app',
+      data() {
+        return {
+          showCity: ''
+        }
+      },
+      mounted: function() {
+        that = this;
+        that.initMap();
+      },
+      watch: {
+        showCity(val) {
+          var filter = ["in", 'name']
+          filter = filter.concat(val.split(','));
+          map.setFilter('china_city_point_light', ['all', filter]);
+        }
+      },
+      methods: {
+        initMap: function() {
+          const token = 'pk.eyJ1IjoibHp1bml1anAwOCIsImEiOiJjam5iZmZwamMwN3RnM2twOHByeHJ4NzJoIn0.IVVIcCdRmFQE8-nQF-8wTA';
+          mapboxgl.accessToken = token;
+          var mapStyle = {
+            "version": 8,
+            "name": "Dark",
+            "sources": {
+              "XYZTile": {
+                "type": "raster",
+                "tiles": ['http://www.google.cn/maps/vt?lyrs=s@189&gl=cn&x={x}&y={y}&z={z}'],
+                "tileSize": 256
+              }
+            },
+            "layers": [{
+                "id": "XYZTile",
+                "type": "raster",
+                "source": "XYZTile",
+                "minzoom": 0,
+                "maxzoom": 22
+              }
+            ]
+          };
+
+          map = new mapboxgl.Map({
+            container: 'map',
+            maxZoom: 18,
+            minZoom: 0,
+            zoom: 4,
+            center: [114.251702,30.552128],
+            style: mapStyle,
+            attributionControl: false
+          });
+          map.on('load', function() {
+            that.addPoints();
+          });
+        },
+        addPoints() {
+          map.addSource('china_city_point',{
+              'type':'vector',
+              'scheme':'tms',
+              'tiles':['http://localhost:8086/geoserver/gwc/service/tms/1.0.0/jtmet%3Achina_city_point@EPSG%3A900913@pbf/{z}/{x}/{y}.pbf']
+          });
+
+          map.addLayer({
+            'id': 'china_city_point',
+            'type': 'circle',
+            'source': 'china_city_point',
+            'source-layer':'china_city_point',
+            'paint': {
+              'circle-radius': 5,
+              'circle-opacity': 0.7,
+              'circle-color': '#0098a3',
+              'circle-blur': 0.7
+            }
+          });
+          map.addLayer({
+            'id': 'china_city_point_light',
+            'type': 'circle',
+            'source': 'china_city_point',
+            'source-layer':'china_city_point',
+            'paint': {
+              'circle-radius': 6,
+              'circle-opacity': 0.7,
+              'circle-color': '#ff0000',
+              'circle-blur': 0.7
+            }
+          });
+          that.showCity = '北京市';
+        }
+      }
+    });
+  </script>
+</body>
+
+</html>
