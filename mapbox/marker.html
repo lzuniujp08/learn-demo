@@ -108,11 +108,9 @@
                 type: 'Feature',
                 geometry: {
                   type: 'Point',
-                  coordinates: [r.lon, r.lat],
-                  properties: {
-                    name: r.name
-                  }
-                }
+                  coordinates: [r.lon, r.lat]
+                },
+                properties: r
               });
             }
             that.addGeojson(geojson);
@@ -155,10 +153,10 @@
             'source': 'points',
             'layout': {
               'icon-image': '81_day',
-              'icon-size': 1,
-              'text-field': ['get', 'name'],
-              'text-offset': [0, 0],
-              'text-anchor': 'bottom'
+              'icon-size': 1
+              // 'text-field': ['get', 'capital'],
+              // 'text-offset': [0, 0],
+              // 'text-anchor': 'bottom'
             }
           });
         }

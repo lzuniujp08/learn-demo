@@ -40,7 +40,8 @@
         showCity(val) {
           var filter = ["in", 'name']
           filter = filter.concat(val.split(','));
-          map.setFilter('china_city_point_light', ['all', filter]);
+          // map.setFilter('china_city_point_light', ['all', filter]);
+          map.setFilter('china_city_point_light', filter);
         }
       },
       methods: {
@@ -58,13 +59,20 @@
               }
             },
             "layers": [{
-                "id": "XYZTile",
-                "type": "raster",
-                "source": "XYZTile",
-                "minzoom": 0,
-                "maxzoom": 22
+              "id": "land",
+              "type": "background",
+              "metadata": {},
+              "layout": {},
+              "paint": {
+                "background-color": [
+                  "interpolate",
+                  ["linear"],
+                  ["zoom"],
+                  8, "rgba(0, 0, 255, 0.2)",
+                  10, "rgba(255, 0, 0, 0.2)"
+                ]
               }
-            ]
+            }]
           };
 
           map = new mapboxgl.Map({
@@ -72,7 +80,7 @@
             maxZoom: 18,
             minZoom: 0,
             zoom: 4,
-            center: [114.251702,30.552128],
+            center: [114.251702, 30.552128],
             style: mapStyle,
             attributionControl: false
           });
@@ -81,19 +89,25 @@
           });
         },
         addPoints() {
-          map.addSource('china_city_point',{
-              'type':'vector',
-              'scheme':'tms',
-              'tiles':['http://localhost:8086/geoserver/gwc/service/tms/1.0.0/jtmet%3Achina_city_point@EPSG%3A900913@pbf/{z}/{x}/{y}.pbf']
+          map.addSource('china_city_point', {
+            'type': 'vector',
+            'scheme': 'tms',
+            'tiles': ['http://localhost:8086/geoserver/gwc/service/tms/1.0.0/jtmet%3Achina_city_point@EPSG%3A900913@pbf/{z}/{x}/{y}.pbf']
           });
 
           map.addLayer({
             'id': 'china_city_point',
             'type': 'circle',
             'source': 'china_city_point',
-            'source-layer':'china_city_point',
+            'source-layer': 'china_city_point',
             'paint': {
-              'circle-radius': 5,
+              'circle-radius': [
+                "interpolate",
+                ["linear"],
+                ["zoom"],
+                8, 3,
+                10, 6
+              ],
               'circle-opacity': 0.7,
               'circle-color': '#0098a3',
               'circle-blur': 0.7
@@ -103,9 +117,15 @@
             'id': 'china_city_point_light',
             'type': 'circle',
             'source': 'china_city_point',
-            'source-layer':'china_city_point',
+            'source-layer': 'china_city_point',
             'paint': {
-              'circle-radius': 6,
+              'circle-radius': [
+                "interpolate",
+                ["linear"],
+                ["zoom"],
+                8, 3,
+                10, 6
+              ],
               'circle-opacity': 0.7,
               'circle-color': '#ff0000',
               'circle-blur': 0.7
