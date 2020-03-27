@@ -13,11 +13,6 @@
 
 <body>
   <div id="app">
-    <div class="ctrl-button">
-      <button @click="filterMap()">
-        filter
-      </button>
-    </div>
     <div id="map"></div>
   </div>
   <script src="lib/mapbox-gl.js"></script>
@@ -131,11 +126,10 @@
                 'source': 'geojson',
                 'layout': {
                   'text-field': ['get', 'name'],
-                  "text-font": ["Arial Unicode MS Bold"],
-                  "text-size": 12
+                  "text-size": 22
                 },
                 paint: {
-                  'text-color': '#ffffff'
+                  'text-color': '#000000'
                 },
                 filter: filter
               }
@@ -151,7 +145,8 @@
               lat: 40.2482
             },
             style: mapStyle,
-            attributionControl: false
+            attributionControl: false,
+            localIdeographFontFamily: "'全新硬笔行书简'"
           });
         },
         filterMap() {
