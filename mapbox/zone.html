@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title>白天不懂夜的黑</title>
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="stylesheet" href="../css/main.css">
+  <link href="lib/mapbox-gl.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+</head>
+
+<body>
+  <div id="app">
+    <div id="map"></div>
+    <div class="layers-panel" style="bottom: auto; top: 20px;">
+      <el-autocomplete v-model="keywords" :fetch-suggestions="querySearchAsync" @select="handleSelect" placeholder="请输入内容">
+      </el-autocomplete>
+    </div>
+  </div>
+  <script src="lib/mapbox-gl.js"></script>
+  <!-- <script src="lib/geojson-vt.js"></script> -->
+  <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+  <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+  <script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+  <script>
+    var that, map;
+
+    var app = new Vue({
+      el: '#app',
+      data() {
+        return {
+          key: 'f71064826162e3debda8786e86459240',
+          keywords: '',
+          source: null
+        }
+      },
+      mounted: function() {
+        that = this;
+        that.initMap();
+      },
+      watch: {},
+      methods: {
+        querySearchAsync(queryString, callback) {
+          const url = 'https://restapi.amap.com/v3/config/district?parameters';
+          var params = {
+            key: that.key,
+            keywords: queryString,
+            extensions: 'all'
+          }
+          $.get(url, params, res => {
+            res = res.districts;
+            for (let i of res) {
+              i.value = i.name
+            }
+            callback(res);
+          })
+        },
+        handleSelect(item) {
+          var polyline = item.polyline;
+          polyline = polyline.split(';');
+          polyline = polyline.map(p => {
+            return p.split(',').map(Number);
+          });
+          var geojson = {
+            type: 'Feature',
+            properties: {
+              name: item.name
+            },
+            geometry: {
+              type: 'Polygon',
+              coordinates: [polyline]
+            }
+          };
+          map.getSource('highlight').setData(geojson);
+          var boundingBox = that.getPolygonBoundingBox(geojson);
+          map.fitBounds(boundingBox, {
+            padding: 200
+          });
+        },
+        getPolygonBoundingBox(feature) {
+          var bounds = [[], []];
+          var polygon;
+          var latitude;
+          var longitude;
+
+          for (var i = 0; i < feature.geometry.coordinates.length; i++) {
+            if (feature.geometry.coordinates.length === 1) {
+              polygon = feature.geometry.coordinates[0];
+            } else {
+              polygon = feature.geometry.coordinates[i][0];
+            }
+
+            for (var j = 0; j < polygon.length; j++) {
+              longitude = polygon[j][0];
+              latitude = polygon[j][1];
+              bounds[0][0] = bounds[0][0] < longitude ? bounds[0][0] : longitude;
+              bounds[1][0] = bounds[1][0] > longitude ? bounds[1][0] : longitude;
+              bounds[0][1] = bounds[0][1] < latitude ? bounds[0][1] : latitude;
+              bounds[1][1] = bounds[1][1] > latitude ? bounds[1][1] : latitude;
+            }
+          }
+          return bounds;
+        },
+        initMap: function() {
+          var rootPath = 'http://127.0.0.1:3000/mapbox/lib/';
+          var mapStyle = {
+            "version": 8,
+            "name": "Dark",
+            "sources": {
+              "XYZTile": {
+                "type": "raster",
+                "tiles": ['http://www.google.cn/maps/vt?lyrs=s@189&gl=cn&x={x}&y={y}&z={z}'],
+                "tileSize": 256
+              }
+            },
+            "glyphs": rootPath + "fonts/mapbox/{fontstack}/{range}.pbf",
+            "layers": [{
+              "id": "XYZTile",
+              "type": "raster",
+              "source": "XYZTile",
+              "minzoom": 0,
+              "maxzoom": 22
+            }]
+          };
+
+          map = new mapboxgl.Map({
+            container: 'map',
+            maxZoom: 18,
+            minZoom: 0,
+            zoom: 4,
+            center: [114.251702, 30.552128],
+            style: mapStyle,
+            attributionControl: false
+          });
+
+          map.on('load', function() {
+            var geojson = {
+              'type': 'FeatureCollection',
+              'features': []
+            };
+            map.addSource('highlight', {
+              type: 'geojson',
+              data: geojson
+            });
+            map.addLayer({
+              id: 'highlight',
+              type: 'fill',
+              source: 'highlight',
+              'paint': {
+                'fill-color': '#00ffff',
+                'fill-opacity': 0.2
+              }
+            });
+            map.addLayer({
+              'id': 'label',
+              'type': 'symbol',
+              'source': 'highlight',
+              'layout': {
+                'text-field': ['get', 'name'],
+                "text-size": 16
+              },
+              paint: {
+                'text-color': '#ffffff'
+              }
+            })
+          })
+        }
+      }
+    });
+  </script>
+</body>
+
+</html>

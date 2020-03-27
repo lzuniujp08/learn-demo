@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title>白天不懂夜的黑</title>
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="stylesheet" href="../css/main.css">
+  <link href="lib/mapbox-gl.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+</head>
+
+<body>
+  <div id="app">
+    <div id="map"></div>
+    <div class="layers-panel" style="bottom: auto; top: 20px;">
+      <el-button
+       icon="el-icon-location"
+       circle
+       type="primary"
+       @click="startDraw"></el-button>
+    </div>
+  </div>
+  <script src="lib/mapbox-gl.js"></script>
+  <!-- <script src="lib/geojson-vt.js"></script> -->
+  <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+  <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+  <script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+  <script>
+    var that, map;
+
+    var app = new Vue({
+      el: '#app',
+      data() {
+        return {
+          key: 'f71064826162e3debda8786e86459240',
+          isDraw: false,
+          points: [],
+          paths: []
+        }
+      },
+      mounted: function() {
+        that = this;
+        that.initMap();
+      },
+      watch: {},
+      methods: {
+        initMap: function() {
+          var rootPath = 'http://127.0.0.1:3000/mapbox/lib/';
+          var mapStyle = {
+            "version": 8,
+            "name": "Dark",
+            "sources": {
+              "XYZTile": {
+                "type": "raster",
+                "tiles": ['http://www.google.cn/maps/vt?lyrs=r@189&gl=cn&x={x}&y={y}&z={z}'],
+                "tileSize": 256
+              }
+            },
+            "glyphs": rootPath + "fonts/mapbox/{fontstack}/{range}.pbf",
+            "layers": [{
+              "id": "XYZTile",
+              "type": "raster",
+              "source": "XYZTile",
+              "minzoom": 0,
+              "maxzoom": 22
+            }]
+          };
+
+          map = new mapboxgl.Map({
+            container: 'map',
+            maxZoom: 18,
+            minZoom: 0,
+            zoom: 12,
+            center: {lng: 116.42687, lat: 39.9026},
+            style: mapStyle,
+            attributionControl: false
+          });
+
+          map.on('load', function() {
+            var geojson = {
+              'type': 'FeatureCollection',
+              'features': []
+            };
+            map.addSource('path', {
+              type: 'geojson',
+              data: geojson
+            });
+            map.addSource('points', {
+              type: 'geojson',
+              data: geojson
+            });
+            map.addLayer({
+              id: 'path',
+              type: 'line',
+              source: 'path',
+              'paint': {
+                'line-color': '#4ddc26',
+                'line-width': 5
+              }
+            });
+            // map.addLayer({
+            //   id: 'path-points',
+            //   type: 'circle',
+            //   source: 'path',
+            //   'paint': {
+            //     'circle-color': '#ffffff',
+            //     'circle-radius': 3,
+            //     'circle-opacity': 0.5,
+            //     'circle-blur': 1
+            //   }
+            // });
+            map.addLayer({
+              id: 'points',
+              type: 'circle',
+              source: 'points',
+              'paint': {
+                'circle-color': [
+                  'match',
+                  ['get', 'type'],
+                  '起', '#62b500',
+                  '#f54336' // 无匹配值
+                ],
+                'circle-radius': 13
+              }
+            });
+            map.addLayer({
+              'id': 'label',
+              'type': 'symbol',
+              'source': 'points',
+              'layout': {
+                'text-field': ['get', 'type'],
+                "text-size": 12
+              },
+              paint: {
+                'text-color': '#ffffff'
+              }
+            })
+          })
+
+          map.on('click', e => {
+            var lngLat = e.lngLat;
+            if(that.isDraw) {
+              that.points.push([lngLat.lng, lngLat.lat]);
+              that.drawPoints();
+              if(that.points.length === 2) {
+                that.getRoute();
+              }
+            }
+          });
+        },
+        getRoute() {
+          that.isDraw = false;
+          map.getCanvas().style.cursor = '';
+          const url = 'https://restapi.amap.com/v3/direction/walking';
+          var start = that.points[0].map(res => {
+            return res.toFixed(5);
+          });
+          var end = that.points[1].map(res => {
+            return res.toFixed(5);
+          });
+          var params = {
+            key: that.key,
+            origin: start.join(','),
+            destination: end.join(',')
+          };
+          $.get(url, params, res => {
+            that.paths = res.route.paths;
+            var geojson = {
+              'type': 'FeatureCollection',
+              'features': []
+            };
+            for(var i = 0;i<that.paths.length;i++) {
+              var steps = that.paths[i].steps;
+              for(var j = 0;j<steps.length;j++) {
+                var step = steps[j];
+                var polyline = step.polyline;
+                polyline = polyline.split(';');
+                polyline = polyline.map(p => {
+                  return p.split(',').map(Number);
+                });
+                var feat = {
+                  type: 'Feature',
+                  properties: {},
+                  geometry: {
+                    type: 'LineString',
+                    coordinates: polyline
+                  }
+                };
+                geojson.features.push(feat);
+              }
+            }
+            map.getSource('path').setData(geojson);
+          })
+        },
+        drawPoints() {
+          var geojson = {
+            'type': 'FeatureCollection',
+            'features': []
+          }
+          for(var i = 0;i<that.points.length;i++) {
+            var type = i=== 0? '起' : '终';
+            var p = that.points[i];
+            geojson.features.push({
+              type: 'Feature',
+              geometry: {
+                type: 'Point',
+                coordinates: p
+              },
+              properties: {
+                'type': type
+              }
+            })
+          }
+          map.getSource('points').setData(geojson);
+        },
+        startDraw() {
+          that.isDraw = true;
+          that.points = [];
+          map.getCanvas().style.cursor = 'crosshair';
+          var geojson = {
+            'type': 'FeatureCollection',
+            'features': []
+          };
+          map.getSource('path').setData(geojson);
+          map.getSource('points').setData(geojson);
+        }
+      }
+    });
+  </script>
+</body>
+
+</html>
