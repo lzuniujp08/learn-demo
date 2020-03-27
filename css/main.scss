@@ -340,6 +340,10 @@ $white65: rgba(255, 255, 255, 0.65);
   .mapboxgl-popup-tip {
     border-top-color: $black65 !important;
   }
+
+  .mapboxgl-popup-close-button {
+    color: white;
+  }
 }
 
 .color-circle {

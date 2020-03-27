@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title>白天不懂夜的黑</title>
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="stylesheet" href="../css/main.css">
+  <link href="lib/mapbox-gl.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+</head>
+
+<body>
+  <div id="app">
+    <div id="map"></div>
+    <div class="layers-panel" style="bottom: auto; top: 20px;">
+      <el-autocomplete
+        v-model="keywords"
+        :fetch-suggestions="querySearchAsync"
+        @select="handleSelect"
+        placeholder="请输入内容"
+      >
+      </el-autocomplete>
+    </div>
+  </div>
+  <script src="lib/mapbox-gl.js"></script>
+  <!-- <script src="lib/geojson-vt.js"></script> -->
+  <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+  <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+  <script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+  <script>
+    var that, map;
+
+    var app = new Vue({
+      el: '#app',
+      data() {
+        return {
+          key: 'f71064826162e3debda8786e86459240',
+          keywords: '',
+          popup: null
+        }
+      },
+      mounted: function() {
+        that = this;
+        that.initMap();
+      },
+      watch: {},
+      methods: {
+        querySearchAsync(queryString, callback) {
+          const url = 'https://restapi.amap.com/v3/place/text?parameters';
+          var params = {
+            key: that.key,
+            keywords: queryString
+          }
+          $.get(url, params, res => {
+            res = res.pois;
+            for(let i of res){
+              i.value = i.name
+            }
+            callback(res);
+          })
+        },
+        handleSelect(item) {
+          var coordinates = item;
+          var name = item.name;
+          var address = item.address;
+          var description = `
+            <h5>${name}</h5>
+            <ul>
+              <li>${address}</li>
+            </ul>
+          `;
+          var location = item.location;
+          location = location.split(',').map(Number);
+          that.popup.setLngLat(location)
+                    .setHTML(description)
+                    .addTo(map);
+          map.flyTo({center: location, zoom: 14});
+        },
+        initMap: function() {
+          var mapStyle = {
+            "version": 8,
+            "name": "Dark",
+            "sources": {
+              "XYZTile": {
+                "type": "raster",
+                "tiles": ['http://www.google.cn/maps/vt?lyrs=s@189&gl=cn&x={x}&y={y}&z={z}'],
+                "tileSize": 256
+              }
+            },
+            "layers": [{
+              "id": "XYZTile",
+              "type": "raster",
+              "source": "XYZTile",
+              "minzoom": 0,
+              "maxzoom": 22
+            }]
+          };
+
+          map = new mapboxgl.Map({
+            container: 'map',
+            maxZoom: 18,
+            minZoom: 0,
+            zoom: 4,
+            center: [114.251702, 30.552128],
+            style: mapStyle,
+            attributionControl: false
+          });
+
+          map.on('load', function(){
+            that.popup = new mapboxgl.Popup({
+              closeButton: true,
+              closeOnClick: false,
+              className: 'my-popup',
+              offset: [0, -15],
+              anchor: 'bottom'
+            });
+          })
+        }
+      }
+    });
+  </script>
+</body>
+
+</html>

@@ -317,6 +317,8 @@ ul {
       width: 65px; }
   .my-popup .mapboxgl-popup-tip {
     border-top-color: rgba(0, 0, 0, 0.65) !important; }
+  .my-popup .mapboxgl-popup-close-button {
+    color: white; }
 
 .color-circle {
   display: inline-block;
