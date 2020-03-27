@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title>白天不懂夜的黑</title>
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="stylesheet" href="../css/main.css">
+  <link href="lib/mapbox-gl.css" rel="stylesheet" />
+</head>
+
+<body>
+  <div id="app">
+    <div id="map"></div>
+  </div>
+  <script src="lib/mapbox-gl.js"></script>
+  <!-- <script src="lib/geojson-vt.js"></script> -->
+  <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+  <script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+  <script>
+    var that, map;
+
+    var app = new Vue({
+      el: '#app',
+      data() {
+        return {
+          key: 'f71064826162e3debda8786e86459240',
+          popup: null
+        }
+      },
+      mounted: function() {
+        that = this;
+        that.initMap();
+      },
+      watch: {},
+      methods: {
+        queryByIP() {
+          const url = 'https://restapi.amap.com/v3/ip?parameters';
+          var params = {
+            key: that.key
+          }
+          $.get(url, params, res => {
+            that.loactionIp(res);
+          })
+        },
+        loactionIp(res) {
+          var rectangle = res.rectangle;
+          var pts = rectangle.split(';');
+          var p1 = pts[0].split(',').map(Number);
+          var p2 = pts[1].split(',').map(Number);
+          var name = res.city;
+          var description = `
+            <h5>${name}</h5>
+          `;
+          var location = [
+            (p1[0] + p2[0]) / 2,
+            (p1[1] + p2[1]) / 2
+          ];
+          that.popup.setLngLat(location)
+                    .setHTML(description)
+                    .addTo(map);
+          map.flyTo({center: location, zoom: 14});
+        },
+        initMap: function() {
+          var mapStyle = {
+            "version": 8,
+            "name": "Dark",
+            "sources": {
+              "XYZTile": {
+                "type": "raster",
+                "tiles": ['http://www.google.cn/maps/vt?lyrs=r@189&gl=cn&x={x}&y={y}&z={z}'],
+                "tileSize": 256
+              }
+            },
+            "layers": [{
+              "id": "XYZTile",
+              "type": "raster",
+              "source": "XYZTile",
+              "minzoom": 0,
+              "maxzoom": 22
+            }]
+          };
+
+          map = new mapboxgl.Map({
+            container: 'map',
+            maxZoom: 18,
+            minZoom: 0,
+            zoom: 4,
+            center: [114.251702, 30.552128],
+            style: mapStyle,
+            attributionControl: false
+          });
+
+          map.on('load', function(){
+            that.popup = new mapboxgl.Popup({
+              closeButton: false,
+              closeOnClick: false,
+              className: 'my-popup',
+              offset: [0, -15],
+              anchor: 'bottom'
+            });
+            that.queryByIP();
+          })
+        }
+      }
+    });
+  </script>
+</body>
+
+</html>
