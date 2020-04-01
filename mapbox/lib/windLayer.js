@@ -541,11 +541,6 @@ var windyMap = {
     map.on('render', function() {
       if (self.visible) self._refreshWindy();
     });
-
-    // map.getView().on('propertychange', function() {
-    //   if (self.windy) self.windy.stop();
-    //   canvas.style.display = 'none';
-    // });
   },
   _refreshWindy: function() {
     const self = this;
