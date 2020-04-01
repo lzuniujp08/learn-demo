@@ -30,18 +30,19 @@
       methods: {
         initMap: function() {
           var rootPath = 'http://127.0.0.1:3000/mapbox/lib/';
-          var filter = ['match', ['get', 'name'],
-            ['昌平区', '海淀区'], false, true
-          ];
+          // var filter = ['match', ['get', 'name'],
+          //   ['昌平区', '海淀区'], false, true
+          // ];
           // var filter = ['!in', 'name', '昌平区', '海淀区'];
 
           // var filter = [
           //   'all',
-          //   ['match', ['get', 'name'], ['昌平区', '海淀区'], true, false],
-          //   ['>=', 'count', 10]
+          //   ['>=', 'count', 10],
+          //   ['==', 'type', 1]
           // ];
 
-          // var filter = ['==', 'name', '昌平区'];
+          var filter = ['>=', 'count', 0];
+          // var fillColor = 'rgba(255, 0, 0, 0.5)';
 
           // 唯一值图
           // var fillColor = [
@@ -64,25 +65,25 @@
           // ];
 
           // 比例符号图
-          // var fillColor = [
-          //   'interpolate',
-          //   ['linear'],
-          //   ['get', 'count'],
-          //   15, '#FFD273',
-          //   30, '#E86D68',
-          //   50, '#9BFF69'
-          // ];
+          var fillColor = [
+            'interpolate',
+            ['linear'],
+            ['get', 'count'],
+            15, '#FFD273',
+            30, '#E86D68',
+            50, '#9BFF69'
+          ];
 
           // 步长图
-          var fillColor = [
-            'step',
-            ['get', 'count'],
-            '#0098A3',
-            10, '#00CA8D',
-            20, '#37C508',
-            30, '#98F300',
-            40, '#EFFF85'
-          ]
+          // var fillColor = [
+          //   'step',
+          //   ['get', 'count'],
+          //   '#0098A3',
+          //   10, '#00CA8D',
+          //   20, '#37C508',
+          //   30, '#98F300',
+          //   40, '#EFFF85'
+          // ]
           var mapStyle = {
             "version": 8,
             "name": "Dark",
@@ -148,10 +149,6 @@
             attributionControl: false,
             localIdeographFontFamily: "'全新硬笔行书简'"
           });
-        },
-        filterMap() {
-          // 1、==
-
         }
       }
     });
