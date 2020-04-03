@@ -1,4 +1,4 @@
- var Windy = function Windy(params) {
+var Windy = function Windy(params) {
    var MIN_VELOCITY_INTENSITY = params.minVelocity || 0; // velocity at which particle intensity is minimum (m/s)
 
    var MAX_VELOCITY_INTENSITY = params.maxVelocity || 10; // velocity at which particle intensity is maximum (m/s)
@@ -40,6 +40,7 @@
      if (options.hasOwnProperty("particleMultiplier")) PARTICLE_MULTIPLIER = options.particleMultiplier;
      if (options.hasOwnProperty("opacity")) OPACITY = +options.opacity;
      if (options.hasOwnProperty("frameRate")) FRAME_RATE = options.frameRate;
+     if (options.hasOwnProperty("colorScale")) colorScale = options.colorScale;
      FRAME_TIME = 1000 / FRAME_RATE;
    }; // interpolation for vectors like wind (u,v,m)
 
@@ -429,12 +430,12 @@
            var yt = y + v[1];
 
            if (field(xt, yt)[2] !== null) {
-             // Path from (x,y) to (xt,yt) is visible, so add this particle to the appropriate draw bucket.
+             // Path from (x,y) to (xt,yt) is _visible, so add this particle to the appropriate draw bucket.
              particle.xt = xt;
              particle.yt = yt;
              buckets[colorStyles.indexFor(m)].push(particle);
            } else {
-             // Particle isn't visible, but it still moves through the field.
+             // Particle isn't _visible, but it still moves through the field.
              particle.x = xt;
              particle.y = yt;
            }
@@ -531,20 +532,23 @@
    };
  }
 
-var windyMap = {
+var WindyMap = {
   windy: null,
   map: null,
-  visible: true,
-  context: null,
-  timer: 0,
-  initWindy(data, map) {
+  _visible: true,
+  _context: null,
+  _timer: 0,
+  data: null,
+  _canvas: null,
+  _options: {},
+  initWindy(data, map, options) {
     const self = this;
-    self.visible = true;
+    self._options = options;
+    self._visible = true;
     self.map = map;
-
+    self.data = data;
     // 删除dom
-    self.hideWind();
-
+    self.destory();
     let canvas = document.createElement('canvas');
     canvas.id = 'windCanvas';
     canvas.width = map.getCanvas().width;
@@ -553,42 +557,49 @@ var windyMap = {
     canvas.style.top = 0;
     canvas.style.left = 0;
     map.getCanvasContainer().appendChild(canvas);
-    this.context = canvas.getContext("2d");
+    this._context = canvas.getContext("2d");
+    self._canvas = canvas;
 
-    self.windy = new Windy({
+    var options = Object.assign({
       canvas: canvas,
       data: data,
       map: map
-    });
+    }, self._options);
+    self.windy = new Windy(options);
 
-    if (self.timer) clearTimeout(self.timer);
-    this.timer = setTimeout(function () {
-      self._refreshWindy();
-    }, 750);
+    var timeout = 200;
+    if (self._timer) clearTimeout(self._timer);
+    this._timer = setTimeout(function () {
+      self._clearAndRestart();
+    }, timeout);
 
     map.on("dragstart", function(){
-      if(self.context) self.context.clearRect(0, 0, 3000, 3000);
-      self.windy.stop();
+      self._clearWind();
     });
 
     map.on("dragend", function() {
-      self._refreshWindy();
+      if (self._timer) clearTimeout(self._timer);
+      this._timer = setTimeout(function () {
+        self._clearAndRestart();
+      }, timeout);
     });
 
     map.on("zoomstart", function(){
-      if(self.context) self.context.clearRect(0, 0, 3000, 3000);
-      self.windy.stop();
+      self._clearWind();
     });
 
     map.on("zoomend", function() {
-      self._refreshWindy();
+      if (self._timer) clearTimeout(self._timer);
+      this._timer = setTimeout(function () {
+        self._clearAndRestart();
+      }, timeout);
     });
 
     map.on("resize", function() {
-      self.clearWind();
+      self._clearWind();
     });
   },
-  _refreshWindy: function() {
+  _clearAndRestart: function() {
     const self = this;
     const _canvas = self.windy.params.canvas;
     if (!self.windy) return;
@@ -611,28 +622,46 @@ var windyMap = {
     );
   },
 
-  hideWind: function() {
-    if(this.context) this.context.clearRect(0, 0, 3000, 3000);
+  destory: function() {
+    this._clearWind();
     let dom = document.getElementById('windCanvas');
     if (dom) dom.parentNode.removeChild(dom);
   },
 
-  clearWind: function() {
+  _clearWind: function() {
+    if(this._context) this._context.clearRect(0, 0, 3000, 3000);
     if (this.windy) this.windy.stop();
-    if(this.context) this.context.clearRect(0, 0, 3000, 3000);
   },
 
-  setVisible: function(flag) {
+  set_visible: function(flag) {
     const self = this;
-    self.visible = flag;
+    self._visible = flag;
     let dom = document.getElementById('windCanvas');
     if (!dom) return;
     if (flag) {
       dom.style.display = 'block';
-      self._refreshWindy();
+      self._clearAndRestart();
     } else {
-      if (self.windy) self.windy.stop();
+      self._clearWind();
       dom.style.display = 'none';
     }
-  }
+  },
+
+  setData: function(data) {
+    this._options.data = data;
+    if (this.windy) {
+      this.windy.setData(data);
+      this._clearAndRestart();
+    }
+  },
+  setOpacity: function setOpacity(opacity) {
+    this._canvas.style.opacity = opacity;
+  },
+  setOptions: function setOptions(options) {
+    this._options = Object.assign(this._options, options);
+    if (this.windy) {
+      this.windy.setOptions(options);
+      this._clearAndRestart();
+    }
+  },
 };

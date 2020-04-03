@@ -13,6 +13,25 @@
 
 <body>
   <div id="app">
+    <div class="ctrl-button">
+      <b>maxVelocity:</b><br>
+      <input type="range" max="100" min="0" step="10" v-model="maxVelocity">
+      <br>
+      <b>minVelocity:</b><br>
+      <input type="range" :max="maxVelocity - 1" min="0" step="1" v-model="minVelocity">
+      <br>
+      <b>lineWidth:</b><br>
+      <input type="range" max="5" min="1" step="1" v-model="lineWidth">
+      <br>
+      <b>frameRate:</b><br>
+      <input type="range" max="90" min="5" step="5" v-model="frameRate">
+      <br>
+      <b>color:</b><br>
+      <input type="color" v-model="colorScale">
+      <br>
+      <button @click="changeData()">data</button>
+
+    </div>
     <div id="map"></div>
   </div>
   <script src="lib/mapbox-gl.js"></script>
@@ -21,15 +40,72 @@
   <script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
   <script>
     var that, map;
+    var windymap;
 
     var app = new Vue({
       el: '#app',
-      data: {},
+      data: {
+        maxVelocity: 10,
+        minVelocity: 1,
+        lineWidth: 1,
+        colorScale: '#ff0000',
+        frameRate: 30
+      },
       mounted: function() {
         that = this;
         that.initMap();
       },
+      watch:{
+        maxVelocity(val) {
+          WindyMap.setOptions({
+            maxVelocity: val
+          });
+        },
+        minVelocity(val) {
+          WindyMap.setOptions({
+            minVelocity: val
+          });
+        },
+        lineWidth(val) {
+          WindyMap.setOptions({
+            lineWidth: val
+          });
+        },
+        frameRate(val) {
+          WindyMap.setOptions({
+            frameRate: val
+          });
+        },
+        colorScale(val) {
+          val = this.colorRgb(val);
+          WindyMap.setOptions({
+            colorScale: [val]
+          });
+        }
+      },
       methods: {
+        colorRgb (sColor){
+            sColor = sColor.toLowerCase();
+            //十六进制颜色值的正则表达式
+            var reg = /^#([0-9a-fA-f]{3}|[0-9a-fA-f]{6})$/;
+            // 如果是16进制颜色
+            if (sColor && reg.test(sColor)) {
+                if (sColor.length === 4) {
+                    var sColorNew = "#";
+                    for (var i=1; i<4; i+=1) {
+                        sColorNew += sColor.slice(i, i+1).concat(sColor.slice(i, i+1));
+                    }
+                    sColor = sColorNew;
+                }
+                //处理六位的颜色值
+                var sColorChange = [];
+                for (var i=1; i<7; i+=2) {
+                    sColorChange.push(parseInt("0x"+sColor.slice(i, i+2)));
+                }
+                return "RGB(" + sColorChange.join(",") + ")";
+            }
+            return sColor;
+        },
         initMap: function() {
           var mapStyle = {
             "version": 8,
@@ -37,7 +113,7 @@
             "sources": {
               "XYZTile": {
                 "type": "raster",
-                "tiles": ['http://www.google.cn/maps/vt?lyrs=s@189&gl=cn&x={x}&y={y}&z={z}'],
+                "tiles": ['http://www.google.cn/maps/vt?lyrs=r@189&gl=cn&x={x}&y={y}&z={z}'],
                 "tileSize": 256
               }
             },
@@ -66,8 +142,20 @@
           });
         },
         addWindyMap() {
+          var self = this;
           $.get("../data/windy-demo.json", function(res) {
-          		windyMap.initWindy(res, map);
+          		WindyMap.initWindy(res, map, {
+                maxVelocity: self.maxVelocity,
+                minVelocity: self.minVelocity,
+                lineWidth: self.lineWidth,
+                colorScale: [self.colorRgb(self.colorScale)],
+                frameRate: self.frameRate
+              });
+          })
+        },
+        changeData() {
+          $.get("../data/windy.json", function(res) {
+            WindyMap.setData(res);
           })
         }
       }
