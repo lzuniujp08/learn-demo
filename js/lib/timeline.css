@@ -3,7 +3,6 @@
 .u-timeline {
     background: #fff;
     border-radius: 6px;
-    border: 1px solid #ccc;
 }
 
 .xdsoft_datepicker_timeline {
@@ -28,7 +27,6 @@
 
 .u-timeline .wrap {
     height: 35px;
-    overflow: hidden;
     padding: 18px 0 47px 8px;
 }
 

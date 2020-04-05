@@ -68,47 +68,6 @@
         }
 
         /**
-         * 前一天、后一天翻页
-         * @param type
-         */
-        function _dayControl(type) {
-            var _currDate = new Date(Date.parse(scope._datepicker.val().replace(/-/g, "/"))),
-                _minDate = new Date(Date.parse(scope.options.minDate.replace(/-/g, "/"))),
-                _maxDate = new Date(Date.parse(scope.options.maxDate.replace(/-/g, "/")));
-            var _afterDate;
-            switch (type) {
-                case "prev": {
-                    scope._nextDay.removeClass("disable");
-                    _afterDate = _currDate.getTime() - 24 * 60 * 60 * 1000;
-                    if (_afterDate <= _minDate.getTime()) {
-                        scope._prevDay.addClass("disable");
-                        _afterDate = _minDate;
-                    }
-                    break;
-                }
-                case "next": {
-                    scope._prevDay.removeClass("disable");
-                    _afterDate = _currDate.getTime() + 24 * 60 * 60 * 1000;
-                    if (_afterDate >= _maxDate.getTime()) {
-                        scope._nextDay.addClass("disable");
-                        _afterDate = _maxDate;
-                    }
-                    break;
-                }
-                default: {
-                    scope._prevDay.removeClass("disable");
-                    _afterDate = _currDate.getTime();
-                    if (_afterDate >= _maxDate.getTime()) {
-                        scope._nextDay.addClass("disable");
-                        _afterDate = _maxDate;
-                    }
-                    break;
-                }
-            }
-            _dayChangeEvent(new Date(_afterDate));
-        }
-
-        /**
          * date change trigger
          * @param date
          * @private
@@ -166,14 +125,6 @@
             var _currDate = new Date(Date.parse(scope._datepicker.val().replace(/-/g, "/"))),
                 _minDate = new Date(Date.parse(scope.options.minDate.replace(/-/g, "/"))),
                 _maxDate = new Date(Date.parse(scope.options.maxDate.replace(/-/g, "/")));
-            scope._prevDay.removeClass("disable");
-            scope._nextDay.removeClass("disable");
-            if (_currDate.getTime() >= _maxDate.getTime()) {
-                scope._nextDay.addClass("disable");
-            }
-            if (_currDate.getTime() <= _minDate.getTime()) {
-                scope._prevDay.addClass("disable");
-            }
             scope.dom.show();
             if (scope.dom.is('.ui-slider')) scope.dom.slider("destroy");
             if (scope.options.autoplay) {
@@ -199,7 +150,7 @@
                 var _tDate = _timeFormat(_t.time);
                 var _time = i % _space === 0 ? _tDate.format("hh:mm") : "";
                 _times.push(_time);
-                var _label = _t.label ? _t.label : _tDate.format("yyyy年MM月dd日hh时mm分");
+                var _label = _tDate.format("MM月dd日hh时");
                 _t.label = _label;
                 _labels.push(_label);
             }
@@ -229,11 +180,7 @@
                     scope._slider.slider("value", _currIndex);
                 }
                 $("#timeline .time-slider").show();
-                scope._infoDom.show();
                 scope._playBtn.attr("title", "暂停").html("||");
-                scope._noneDom.hide();
-                //默认播放第一个
-                // _play();
                 if (scope.options.autoplay && scope.times.length > 1) {
                     _setInterval();
                 }
@@ -244,10 +191,8 @@
             }
             else {
                 _stop();
-                scope._infoDom.hide();
                 scope._playBtn.attr("title", "播放").html("▶");
                 $("#timeline .time-slider").hide();
-                scope._noneDom.show();
             }
         }
 
@@ -264,70 +209,39 @@
             var _dateDom = $("<input/>").attr("type", "text").attr("id", "dateinfo"),
                 _iconDom = $("<i class='icon-历史日历'/>").addClass("dateIcon");
                 _btnsDom = $("<div/>").addClass("btns"),
-                _prevDayDom = $("<button/>").addClass("button").attr("title", "上一天").html("<<"),
-                _prevTimeDom = $("<button/>").attr("title", "上一时").html("<"),
-                _nextDayDom = $("<button/>").addClass("button").attr("title", "下一天").html(">>"),
-                _nextTimeDom = $("<button/>").attr("title", "下一时").html(">"),
                 _playDom = scope.options.autoplay ? $("<button/>").attr("title", "暂停").html("||") :
                     $("<button/>").attr("title", "播放").html("▶"),
-                _switchbtn = $("<div/>").data("open", true).attr("title", "收起").addClass("closebtn").html("╲╱"),
-                _showDom = $("<div/>").addClass("showName").hide(),
                 _wrapDom = $("<div/>").addClass("wrap");
-            var noneDiv = $("<div/>").addClass("none")/*.html("---------------------------暂无数据-----------------------")*/.hide();
             _sliderDom = $("<div/>").addClass("time-slider");
             _playDom.addClass("button");
 
             var _domWidth = scope.dom.width();
             var _d = 85;
             if (scope.options.isDate) {
-                _d = _d + 200;
-            }
-            if (scope.options.isBtns) {
-                _d = _d + 40;
+                _d = _d + 140;
             }
             _sliderDom.css({
                 width: (_domWidth - _d) + "px"
             });
 
             scope._slider = _sliderDom;
-            scope._prevDay = _prevDayDom;
-            scope._nextDay = _nextDayDom;
-            scope._prevTime = _prevTimeDom;
-            scope._nextTime = _nextTimeDom;
             scope._playBtn = _playDom;
-            scope._infoDom = _showDom;
-            scope._noneDom = noneDiv;
 
-            _btnsDom.append(_prevDayDom).append(_prevTimeDom)
-                .append(_playDom).append(_nextTimeDom).append(_nextDayDom);
+            _btnsDom.append(_playDom);
             if (scope.options.isDate) {
-                _prevDayDom.show();
-                _nextDayDom.show();
                 _dateDom.show();
                 _iconDom.show();
             }
             else {
-                _prevDayDom.hide();
-                _nextDayDom.hide();
                 _dateDom.hide();
                 _iconDom.hide();
-            }
-            if (scope.options.isBtns) {
-                _prevTimeDom.show();
-                _nextTimeDom.show();
-            }
-            else {
-                _prevTimeDom.hide();
-                _nextTimeDom.hide();
             }
             _iconDom.on("click",function(){
                 _dateDom.focus();
             });
 
-            _wrapDom.append(_dateDom).append(_iconDom).append(_btnsDom).append(noneDiv).append(_sliderDom);
-            _showDom.appendTo($("#map"));
-            scope.dom.append(_wrapDom).append(_switchbtn);
-            //init datepicker
+            _wrapDom.append(_dateDom).append(_iconDom).append(_btnsDom).append(_sliderDom);
+            scope.dom.append(_wrapDom);
             scope._datepicker = _dateDom.datetimepicker({
                 lang: 'ch',
                 className: "datepicker_timeline",
@@ -355,42 +269,10 @@
                     })
                 }
             });
-            //初始化按钮颜色
-            var _currDate = new Date(Date.parse(scope._datepicker.val().replace(/-/g, "/"))),
-                _minDate = new Date(Date.parse(scope.options.minDate.replace(/-/g, "/"))),
-                _maxDate = new Date(Date.parse(scope.options.maxDate.replace(/-/g, "/")));
-            if (_currDate.getTime() >= _maxDate.getTime()) {
-                scope._nextDay.addClass("disable");
-            } else if (_currDate.getTime() <= _minDate.getTime()) {
-                scope._prevDay.addClass("disable");
-            }
-
-            _switchbtn.on("click", function () {
-                var _open = $(this).data("open");
-                $(_wrapDom).toggle("fast");
-                if (_open) {
-                    scope.dom.css("height", "0");
-                    $("#map,#subnav,.g-tab-box,#subswitch").css("bottom", "0");
-                    $(this).attr("title", "打开").data("open", false).html("╱╲");
-                } else {
-                    scope.dom.css("height", "5rem");
-                    $("#map,#subnav,.g-tab-box,#subswitch").css("bottom", "5rem");
-                    $(this).attr("title", "收起").data("open", true).html("╲╱");
-                }
-            });
-
-            //prev or next day ctrl
-            _prevDayDom.on("click", function () {
-                _dayControl("prev");
-            });
-            _nextDayDom.on("click", function () {
-                _dayControl("next");
-            });
-
             //play control
             _playDom.on("click", function () {
                 //▶表示播放，2竖线表示暂停
-                if (_interval != 0) {
+                if (_interval !== 0) {
                     $(this).attr("title", "播放").html("▶");
                     _stop();
                 }
@@ -424,8 +306,7 @@
         };
 
         scope.selectByTime = function (time) {
-            // 控制实况默认选中最后一个，预报默认选中第一个
-            _currIndex = window.as.AppConfig.sysflag === 'live'?scope.times.length - 1:0;
+            _currIndex = 0;
             for(var i=0;i<scope.times.length;i++){
                 var _time = scope.times[i];
                 if(_time.time===time){
@@ -460,30 +341,12 @@
             });
             if (scope.options.isDate) {
                 scope._datepicker.show();
-                scope._prevDay.show();
-                scope._nextDay.show();
             }
             else {
                 scope._datepicker.hide();
-                scope._prevDay.hide();
-                scope._nextDay.hide();
-            }
-            if (scope.options.isBtns) {
-                scope._prevTime.show();
-                scope._nextTime.show();
-            }
-            else {
-                scope._prevTime.hide();
-                scope._nextTime.hide();
             }
             var _domWidth = scope.dom.width();
             var _d = 85;
-            if (scope.options.isDate) {
-                _d = _d + 200;
-            }
-            if (scope.options.isBtns) {
-                _d = _d + 40;
-            }
             scope._slider.css({
                 width: (_domWidth - _d) + "px"
             });

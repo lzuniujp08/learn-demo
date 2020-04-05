@@ -15,14 +15,14 @@ var app = new Vue({
     init() {
       var that = this;
       $.get("../data/timeline.json", function (res) {
-        console.log(res);
         that.timeline = $("#timeline").timeline({
           domid: "timeline",
           times: res,
-          isDate: false,
+          isDate: true,
           autoplay: that.autoplay,
           interval: that.interval,
           currIndex: that.currIndex,
+          value: new Date().format('yyyy-MM-dd'),
           timeChangeEvt: function (time) {
             that._timeChangeEvt(time)
           },
