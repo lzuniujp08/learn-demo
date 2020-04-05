@@ -260,7 +260,6 @@
             $(".showName").remove();
             $("#map,#subnav,.g-tab-box,#subswitch").css("bottom", "5rem");
             scope.dom.css("height", "5rem");
-            map.updateSize();
             //create dom
             var _dateDom = $("<input/>").attr("type", "text").attr("id", "dateinfo"),
                 _iconDom = $("<i class='icon-历史日历'/>").addClass("dateIcon");
@@ -378,7 +377,6 @@
                     $("#map,#subnav,.g-tab-box,#subswitch").css("bottom", "5rem");
                     $(this).attr("title", "收起").data("open", true).html("╲╱");
                 }
-                map.updateSize();
             });
 
             //prev or next day ctrl
@@ -403,15 +401,6 @@
             });
 
             _updateTimes();
-            window.as.AppConfig.asEmitter.once("stopTimeline", function () {
-                _stop();
-                scope._infoDom.html("").hide();
-                $("#map,#subnav,.g-tab-box,#subswitch").css("bottom", "0");
-                scope.dom.hide();
-            });
-            window.as.AppConfig.asEmitter.once("updateNoneInfo", function (noneinfo) {
-                scope._noneDom.html("----------" + noneinfo + "----------");
-            });
         };
 
         //自动执行初始化函数
