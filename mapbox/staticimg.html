@@ -70,7 +70,7 @@
               },
               "XYZTile": {
                 "type": "raster",
-                "tiles": ['http://webrd01.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&lang=zh_cn&size=1&scale=1&style=8'],
+                "tiles": ['http://www.google.cn/maps/vt?lyrs=s@189&gl=cn&x={x}&y={y}&z={z}'],
                 "tileSize": 256,
               }
             },
@@ -128,16 +128,16 @@
         play() {
           that.currentTime = that.images[that.current].time;
           var coords = [
-            [70, 65],
-            [145, 65],
-            [145, 15],
-            [70, 15]
+            [95.0595932006835938, 33.0704185485839588],
+            [124.9745932006836000, 33.0704185485839588],
+            [124.9745932006836000, 15.3704185485839560],
+            [95.0595932006835938, 15.3704185485839560]
           ];
           const source = map.getSource('loopimage');
           if (!source) {
             map.addSource('loopimage', {
               type: 'image',
-              url: that.images[that.current].url,
+              url: '../css/tem.png',
               coordinates: coords
             });
             map.addLayer({

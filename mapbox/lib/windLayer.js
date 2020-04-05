@@ -633,7 +633,7 @@ var WindyMap = {
     if (this.windy) this.windy.stop();
   },
 
-  set_visible: function(flag) {
+  setVisible: function(flag) {
     const self = this;
     self._visible = flag;
     let dom = document.getElementById('windCanvas');

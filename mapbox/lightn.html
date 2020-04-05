@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title>白天不懂夜的黑</title>
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="stylesheet" href="../css/main.css">
+  <link href="lib/mapbox-gl.css" rel="stylesheet" />
+</head>
+
+<body>
+  <div id="app">
+    <div id="map"></div>
+  </div>
+  <script src="lib/mapbox-gl.js"></script>
+  <script src="lib/lightn.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+  <script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+  <script>
+    var that, map;
+    var points = [];
+    var app = new Vue({
+      el: '#app',
+      data: {},
+      mounted: function() {
+        that = this;
+        that.initMap();
+      },
+      methods: {
+        initMap: function() {
+          var mapStyle = {
+            "version": 8,
+            "name": "Dark",
+            "sources": {
+              "XYZTile": {
+                "type": "raster",
+                "tiles": ['https://map.geoq.cn/ArcGIS/rest/services/ChinaOnlineStreetPurplishBlue/MapServer/tile/{z}/{y}/{x}'],
+                "tileSize": 256
+              }
+            },
+            "layers": [{
+                "id": "XYZTile",
+                "type": "raster",
+                "source": "XYZTile",
+                "minzoom": 0,
+                "maxzoom": 22
+              }
+            ]
+          };
+
+          map = new mapboxgl.Map({
+            container: 'map',
+            maxZoom: 18,
+            minZoom: 0,
+            zoom: 7.4,
+            center: {lng: 113.48405904839296, lat: 20.936801295292057},
+            style: mapStyle,
+            attributionControl: false
+          });
+          map.on('load', function() {
+            that.addLightn();
+          });
+
+
+          map.on('click', function(e){
+            console.log([e.lngLat.lng, e.lngLat.lat]);
+            points.push([e.lngLat.lng, e.lngLat.lat]);
+          });
+        },
+        addLightn() {
+          var data = [
+            [112.08111460679623, 20.81427375298513],
+            [112.71805970936151, 20.09658100108571],
+            [113.9003630369973, 19.673781290716917],
+            [114.10018895152848, 21.004828899791406],
+            [115.36575307688554, 21.605996657108136],
+            [116.46479560680149, 22.01182925045798],
+            [116.34406745010693, 19.75608056730792]
+          ];
+          LightnMap.init(map, data);
+        }
+      }
+    });
+  </script>
+</body>
+
+</html>

@@ -364,4 +364,12 @@ ul {
     margin-left: 8px;
     font-weight: normal; }
 
+#timeline {
+  position: absolute;
+  bottom: 35px;
+  display: none;
+  z-index: 99;
+  width: calc(100% - 140px);
+  left: 70px; }
+
 /*# sourceMappingURL=main.css.map */
