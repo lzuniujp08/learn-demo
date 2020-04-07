@@ -16,22 +16,19 @@
     <div id="map"></div>
   </div>
   <script src="lib/mapbox-gl.js"></script>
-  <script src="lib/windLayer.js"></script>
+  <script src="lib/rain.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vue"></script>
   <script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
   <script>
     var that, map;
-    var windymap;
-
+    var points = [];
     var app = new Vue({
       el: '#app',
-      data: {
-      },
+      data: {},
       mounted: function() {
         that = this;
         that.initMap();
       },
-      watch:{},
       methods: {
         initMap: function() {
           var mapStyle = {
@@ -40,44 +37,45 @@
             "sources": {
               "XYZTile": {
                 "type": "raster",
-                "tiles": ['http://www.google.cn/maps/vt?lyrs=r@189&gl=cn&x={x}&y={y}&z={z}'],
+                "tiles": ['https://map.geoq.cn/ArcGIS/rest/services/ChinaOnlineStreetPurplishBlue/MapServer/tile/{z}/{y}/{x}'],
                 "tileSize": 256
               }
             },
             "layers": [{
-                "id": "XYZTile",
-                "type": "raster",
-                "source": "XYZTile",
-                "minzoom": 0,
-                "maxzoom": 22
-              }
-            ]
+              "id": "XYZTile",
+              "type": "raster",
+              "source": "XYZTile",
+              "minzoom": 0,
+              "maxzoom": 22
+            }]
           };
 
           map = new mapboxgl.Map({
             container: 'map',
             maxZoom: 18,
             minZoom: 0,
-            zoom: 4.8,
-            center: {lng: 151.28466296303554, lat: -18.199199739402374},
+            zoom: 7.4,
+            center: {
+              lng: 113.48405904839296,
+              lat: 20.936801295292057
+            },
             style: mapStyle,
             attributionControl: false
           });
-          let firstInit = true;
           map.on('load', function() {
-            that.addWindyMap();
+            that.addRainEffect();
           });
         },
-        addWindyMap() {
-          var self = this;
-          $.get("../data/water-gbr.json", function(res) {
-          		WindyMap.initWindy(res, map, {
-                maxVelocity: 1,
-		            velocityScale: 0.10,
-                lineWidth: 2,
-                colorScale: ['rgb(255, 255, 255)']
-              });
-          })
+        addRainEffect() {
+          canvasDrop.init({
+            type: "rain", // drop类型，有rain or snow
+            speed: [0.4, 2.5], //速度范围
+            size_range: [0.5, 1.5], //大小半径范围
+            hasBounce: true, //是否有反弹效果or false,
+            wind_direction: -105, //角度
+            hasGravity: true,
+            maxNum: 1000
+          });
         }
       }
     });
