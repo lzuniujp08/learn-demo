@@ -42,7 +42,7 @@
               },
               "XYZTile": {
                 "type": "raster",
-                "tiles": ['http://webrd01.is.autonavi.com/appmaptile?x={x}&y={y}&z={z}&lang=zh_cn&size=1&scale=1&style=8'],
+                "tiles": ['http://www.google.cn/maps/vt?lyrs=r@189&gl=cn&x={x}&y={y}&z={z}'],
                 "tileSize": 256,
               }
             },
@@ -52,7 +52,7 @@
                 "id": "background",
                 "type": "background",
                 "paint": {
-                  "background-color": "#111"
+                  "background-color": "#fff"
                 }
               },
               {
@@ -80,7 +80,7 @@
             minZoom: 0,
             zoom: 3,
             center: [109.1699, 45.9719],
-            style: mapStyle,
+            style: 'mapbox://styles/mapbox/light-v10',
             attributionControl: false
           });
           let firstInit = true;
@@ -106,6 +106,37 @@
               'circle-radius': 3,
               'circle-stroke-width': 0
             }
+          });
+          map.addSource('building',{
+            type: 'geojson',
+            data: '../data/nfdw2.geojson'
+          });
+
+          map.addLayer({
+              'id': '3d-buildings',
+              'source': 'building',
+              'type': 'fill-extrusion',
+              'paint': {
+                  'fill-extrusion-color': [
+                      'interpolate',
+                      ['linear'],
+                      ['get', 'height'],
+                      2000, '#313695',
+                      3000, '#4575b4',
+                      4000, '#74add1',
+                      5000, '#abd9e9',
+                      6000, '#e0f3f8',
+                      7000, '#ffffbf',
+                      8000, '#fee090',
+                      9000, '#fdae61',
+                      10000, '#f46d43',
+                      11000, '#d73027',
+                      12000, '#a50026'
+                  ],
+                  // 'fill-extrusion-color': '#ccc',
+                  'fill-extrusion-height': ['get', 'height'],
+                  'fill-extrusion-opacity': 0.5
+              }
           });
         }
       }

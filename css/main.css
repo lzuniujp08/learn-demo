@@ -372,4 +372,19 @@ ul {
   width: calc(100% - 140px);
   left: 70px; }
 
+@keyframes rotate {
+  0% {
+    transform: rotate(0deg); }
+  100% {
+    transform: rotate(360deg); } }
+.typhoon-image {
+  overflow: hidden;
+  display: none; }
+
+.typhoon-icon {
+  width: 50px;
+  height: 50px;
+  background: url("typhoon.png");
+  animation: rotate 1s linear infinite; }
+
 /*# sourceMappingURL=main.css.map */

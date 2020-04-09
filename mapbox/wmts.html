@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title>白天不懂夜的黑</title>
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="stylesheet" href="../css/main.css">
+  <link href="lib/mapbox-gl.css" rel="stylesheet" />
+</head>
+
+<body>
+  <div id="app">
+    <div id="map"></div>
+  </div>
+  <script src="lib/mapbox-gl.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+  <script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+  <script>
+    var that, map;
+
+    var app = new Vue({
+      el: '#app',
+      data: {
+        dim: 0
+      },
+      mounted: function() {
+        that = this;
+        that.initMap();
+      },
+      methods: {
+        initMap: function() {
+          var mapStyle = {
+            "version": 8,
+            "name": "Dark",
+            "sources": {
+              "XYZTile": {
+                "type": "raster",
+                "tiles": ['http://www.google.cn/maps/vt?lyrs=s@189&gl=cn&x={x}&y={y}&z={z}'],
+                "tileSize": 256
+              }
+            },
+            "layers": [{
+              "id": "XYZTile",
+              "type": "raster",
+              "source": "XYZTile",
+              "minzoom": 0,
+              "maxzoom": 22
+            }]
+          };
+
+          map = new mapboxgl.Map({
+            container: 'map',
+            maxZoom: 18,
+            minZoom: 0,
+            zoom: 4.8,
+            center: {lng: 109.91446489592977, lat: 24.17836243949519},
+            style: mapStyle,
+            attributionControl: false
+          });
+          let firstInit = true;
+          map.on('load', function() {
+            that.addWmtsLayer();
+          });
+        },
+        addWmtsLayer() {
+          map.addSource('wmts', {
+            "type": "raster",
+            "tiles": [that.getUrl()],
+            "tileSize": 256
+          });
+          map.addLayer({
+            "id": "wmts",
+            "type": "raster",
+            "source": "wmts",
+            "minzoom": 0,
+            "maxzoom": 22
+          })
+          // setInterval(function(){
+          //   that.dim++;
+          //   map.removeLayer('wmts');
+          //   map.removeSource('wmts');
+          //   map.addSource('wmts', {
+          //     "type": "raster",
+          //     "tiles": [that.getUrl()],
+          //     "tileSize": 256
+          //   });
+          //   map.addLayer({
+          //     "id": "wmts",
+          //     "type": "raster",
+          //     "source": "wmts",
+          //     "minzoom": 0,
+          //     "maxzoom": 22
+          //   });
+          // }, 2000)
+        },
+        getUrl() {
+          var tem_legend = {
+            "colors": [
+              [0, 150, 200, 200],
+              [0, 50, 180, 200],
+              [0, 0, 153, 200],
+              [0, 0, 255, 200],
+              [0, 102, 255, 200],
+              [51, 153, 255, 200],
+              [0, 204, 255, 200],
+              [0, 255, 255, 200],
+              [153, 255, 255, 200],
+              [0, 255, 0, 200],
+              [153, 255, 102, 200],
+              [204, 255, 51, 200],
+              [255, 255, 0, 200],
+              [255, 204, 0, 200],
+              [255, 153, 0, 200],
+              [255, 102, 0, 200],
+              [255, 0, 0, 200],
+              [183, 0, 0, 200],
+              [255, 0, 153, 200],
+              [204, 0, 255, 200],
+              [153, 0, 204, 200],
+              [102, 0, 102, 200]
+            ],
+            "levels": [-30, -20, -10, -6, -3, 0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, 39, 42, 45, 48]
+          }
+          tem_legend = JSON.stringify(tem_legend);
+          var paramDict = {
+            'filepath': 'merge.nc',
+            'nccfg': 'nfdw',
+            'ele': 'TEM',
+            'ele_dim': this.dim
+          }
+          paramDict = JSON.stringify(paramDict)
+          var url = `http://localhost:3002/tileserver/?legend=${tem_legend}&ncparam=${paramDict}&x={x}&y={y}&z={z}`;
+          return url;
+        }
+      }
+    });
+  </script>
+</body>
+
+</html>

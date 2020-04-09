@@ -45,11 +45,11 @@
     var app = new Vue({
       el: '#app',
       data: {
-        maxVelocity: 10,
+        maxVelocity: 1000,
         minVelocity: 1,
         lineWidth: 1,
         colorScale: '#ff0000',
-        frameRate: 30
+        frameRate: 5
       },
       mounted: function() {
         that = this;
@@ -137,19 +137,42 @@
             attributionControl: false
           });
           let firstInit = true;
+          //32.07495    15.385437
+          // 124.92483   95.07517
+          var coords = [
+            [95.07517, 32.07495],
+            [124.92483, 32.07495],
+            [124.92483, 15.385437],
+            [95.07517, 15.385437]
+          ];
           map.on('load', function() {
+            map.addSource('loopimage', {
+              type: 'image',
+              url: '../css/wind.png',
+              coordinates: coords
+            });
+            map.addLayer({
+              'id': 'loopimage',
+              'source': 'loopimage',
+              'type': 'raster',
+              'paint': {
+                'raster-opacity': 0.65,
+                'raster-fade-duration': 0
+              }
+            });
             that.addWindyMap();
           });
         },
         addWindyMap() {
           var self = this;
-          $.get("../data/windy-demo.json", function(res) {
+          $.get("../data/windy-world.json", function(res) {
           		WindyMap.initWindy(res, map, {
                 maxVelocity: self.maxVelocity,
                 minVelocity: self.minVelocity,
                 lineWidth: self.lineWidth,
                 colorScale: [self.colorRgb(self.colorScale)],
-                frameRate: self.frameRate
+                frameRate: self.frameRate,
+                velocityScale: 0.004
               });
           })
         },
