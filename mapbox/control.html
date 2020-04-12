@@ -16,12 +16,11 @@
     <div id="map"></div>
   </div>
   <script src="lib/mapbox-gl.js"></script>
-  <script src="lib/lightn.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vue"></script>
   <script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
   <script>
     var that, map;
-    var points = [];
+
     var app = new Vue({
       el: '#app',
       data: {},
@@ -37,7 +36,7 @@
             "sources": {
               "XYZTile": {
                 "type": "raster",
-                "tiles": ['https://map.geoq.cn/ArcGIS/rest/services/ChinaOnlineStreetPurplishBlue/MapServer/tile/{z}/{y}/{x}'],
+                "tiles": ['http://www.google.cn/maps/vt?lyrs=s@189&gl=cn&x={x}&y={y}&z={z}'],
                 "tileSize": 256
               }
             },
@@ -55,26 +54,25 @@
             container: 'map',
             maxZoom: 18,
             minZoom: 0,
-            zoom: 7.4,
-            center: {lng: 113.48405904839296, lat: 20.936801295292057},
+            zoom: 3,
+            center: [109.1699, 45.9719],
             style: mapStyle,
             attributionControl: false
           });
+
           map.on('load', function() {
-            that.addLightn();
+            that.addControls();
           });
         },
-        addLightn() {
-          var data = [
-            [112.08111460679623, 20.81427375298513],
-            [112.71805970936151, 20.09658100108571],
-            [113.9003630369973, 19.673781290716917],
-            [114.10018895152848, 21.004828899791406],
-            [115.36575307688554, 21.605996657108136],
-            [116.46479560680149, 22.01182925045798],
-            [116.34406745010693, 19.75608056730792]
-          ];
-          LightnMap.init(map, data);
+        addControls() {
+          var nav = new mapboxgl.NavigationControl();
+          map.addControl(nav, 'top-left');
+          map.addControl(new mapboxgl.FullscreenControl({container: document.querySelector('body')}));
+          var scale = new mapboxgl.ScaleControl({
+            maxWidth: 80,
+            unit: 'metric'
+          });
+          map.addControl(scale);
         }
       }
     });

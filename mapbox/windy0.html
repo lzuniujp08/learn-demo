@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title>白天不懂夜的黑</title>
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="stylesheet" href="../css/main.css">
+  <link href="lib/mapbox-gl.css" rel="stylesheet" />
+</head>
+
+<body>
+  <div id="app">
+    <div class="ctrl-button">
+      <b>maxVelocity:</b><br>
+      <input type="range" max="100" min="0" step="10" v-model="maxVelocity">
+      <br>
+      <b>minVelocity:</b><br>
+      <input type="range" :max="maxVelocity - 1" min="0" step="1" v-model="minVelocity">
+      <br>
+      <b>lineWidth:</b><br>
+      <input type="range" max="5" min="1" step="1" v-model="lineWidth">
+      <br>
+      <b>frameRate:</b><br>
+      <input type="range" max="90" min="5" step="5" v-model="frameRate">
+      <br>
+      <b>color:</b><br>
+      <input type="color" v-model="colorScale">
+      <br>
+      <button @click="changeData()">data</button>
+
+    </div>
+    <div id="map"></div>
+  </div>
+  <script src="lib/mapbox-gl.js"></script>
+  <script src="lib/windLayer0.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+  <script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+  <script>
+    var that, map;
+    var windymap;
+
+    var app = new Vue({
+      el: '#app',
+      data: {
+        maxVelocity: 1000,
+        minVelocity: 1,
+        lineWidth: 1,
+        colorScale: '#ff0000',
+        frameRate: 15
+      },
+      mounted: function() {
+        that = this;
+        that.initMap();
+      },
+      watch: {
+        maxVelocity(val) {
+          WindyMap.setOptions({
+            maxVelocity: val
+          });
+        },
+        minVelocity(val) {
+          WindyMap.setOptions({
+            minVelocity: val
+          });
+        },
+        lineWidth(val) {
+          WindyMap.setOptions({
+            lineWidth: val
+          });
+        },
+        frameRate(val) {
+          WindyMap.setOptions({
+            frameRate: val
+          });
+        },
+        colorScale(val) {
+          val = this.colorRgb(val);
+          WindyMap.setOptions({
+            colorScale: [val]
+          });
+        }
+      },
+      methods: {
+        colorRgb(sColor) {
+          sColor = sColor.toLowerCase();
+          //十六进制颜色值的正则表达式
+          var reg = /^#([0-9a-fA-f]{3}|[0-9a-fA-f]{6})$/;
+          // 如果是16进制颜色
+          if (sColor && reg.test(sColor)) {
+            if (sColor.length === 4) {
+              var sColorNew = "#";
+              for (var i = 1; i < 4; i += 1) {
+                sColorNew += sColor.slice(i, i + 1).concat(sColor.slice(i, i + 1));
+              }
+              sColor = sColorNew;
+            }
+            //处理六位的颜色值
+            var sColorChange = [];
+            for (var i = 1; i < 7; i += 2) {
+              sColorChange.push(parseInt("0x" + sColor.slice(i, i + 2)));
+            }
+            return "RGB(" + sColorChange.join(",") + ")";
+          }
+          return sColor;
+        },
+        initMap: function() {
+          var mapStyle = {
+            "version": 8,
+            "name": "Dark",
+            "sources": {
+              "XYZTile": {
+                "type": "raster",
+                "tiles": ['http://www.google.cn/maps/vt?lyrs=r@189&gl=cn&x={x}&y={y}&z={z}'],
+                "tileSize": 256
+              }
+            },
+            "layers": [{
+              "id": "XYZTile",
+              "type": "raster",
+              "source": "XYZTile",
+              "minzoom": 0,
+              "maxzoom": 22
+            }]
+          };
+
+          map = new mapboxgl.Map({
+            container: 'map',
+            maxZoom: 18,
+            minZoom: 0,
+            zoom: 3,
+            center: [109.1699, 45.9719],
+            style: mapStyle,
+            attributionControl: false
+          });
+          let firstInit = true;
+          //32.07495    15.385437
+          // 124.92483   95.07517
+          var coords = [
+            [95.07517, 32.07495],
+            [124.92483, 32.07495],
+            [124.92483, 15.385437],
+            [95.07517, 15.385437]
+          ];
+          map.on('load', function() {
+            map.addSource('loopimage', {
+              type: 'image',
+              url: '../css/wind.png',
+              coordinates: coords
+            });
+            map.addLayer({
+              'id': 'loopimage',
+              'source': 'loopimage',
+              'type': 'raster',
+              'paint': {
+                'raster-opacity': 0.65,
+                'raster-fade-duration': 0
+              }
+            });
+            map.addSource('building',{
+              type: 'geojson',
+              data: '../data/nfdw2.geojson'
+            });
+            map.addLayer({
+                'id': '3d-buildings',
+                'source': 'building',
+                'type': 'fill-extrusion',
+                'paint': {
+                    'fill-extrusion-color': [
+                        'interpolate',
+                        ['linear'],
+                        ['get', 'height'],
+                        2000, '#313695',
+                        3000, '#4575b4',
+                        4000, '#74add1',
+                        5000, '#abd9e9',
+                        6000, '#e0f3f8',
+                        7000, '#ffffbf',
+                        8000, '#fee090',
+                        9000, '#fdae61',
+                        10000, '#f46d43',
+                        11000, '#d73027',
+                        12000, '#a50026'
+                    ],
+                    // 'fill-extrusion-color': '#ccc',
+                    'fill-extrusion-height': ['get', 'height'],
+                    'fill-extrusion-opacity': 0.5
+                }
+            });
+            that.addWindyMap();
+          });
+        },
+        addWindyMap() {
+          var self = this;
+          $.get("../data/windy-world.json", function(res) {
+            WindyMap.initWindy(res, map, {
+              maxVelocity: self.maxVelocity,
+              minVelocity: self.minVelocity,
+              lineWidth: self.lineWidth,
+              colorScale: [self.colorRgb(self.colorScale)],
+              frameRate: self.frameRate,
+              velocityScale: 0.004
+            });
+          })
+        }
+      }
+    });
+  </script>
+</body>
+
+</html>
