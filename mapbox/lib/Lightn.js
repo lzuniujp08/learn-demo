@@ -30,8 +30,8 @@ class Lightning {
 
         //add position noise
         if (i != segments) {
-          dv.Y1 += l * Math.random() * 2;
-          dv.X1 += l * Math.random() * 2;
+          dv.Y1 += l * Math.random() * 1;
+          dv.X1 += l * Math.random() * 1;
         }
         //new vector for segment
         var r = new Vector(refv.X1, refv.Y1, dv.X1, dv.Y1);
@@ -43,7 +43,6 @@ class Lightning {
           Blur: this.config.GlowBlur * lR,
           BlurColor: this.config.GlowColor,
           Alpha: this.Random(this.config.GlowAlpha, this.config.GlowAlpha * 2) / 100
-
         });
 
         //main line
@@ -137,11 +136,11 @@ var LightnMap = {
     Color: "white",
     GlowAlpha: "30",
     GlowBlur: "10",
-    GlowColor: "#000055",
-    GlowWidth: "40",
-    Segments: "600",
+    GlowColor: "#ffe011",
+    GlowWidth: "100",
+    Segments: "400",
     Threshold: "0.5",
-    Width: "2"
+    Width: "3"
   },
   _lts: [],
   _animation: null,
@@ -179,10 +178,6 @@ var LightnMap = {
     map.on("zoomend", function() {
       self._clearAndRestart();
     });
-
-    map.on("resize", function() {
-      self._clear();
-    });
   },
   _getPoints: function(x, y, size) {
     var self = this;
@@ -205,9 +200,11 @@ var LightnMap = {
     for (var i = 0; i < self._data.length; i++) {
       var d = self._data[i];
       var xy = self._map.project(d);
-      var x = xy.x + self._randomNum(-50, 50);
-      var y = xy.y + self._randomNum(-50, 50);
-      var size = self._randomNum(20, 60);
+      // var x = xy.x + self._randomNum(-50, 50) ;
+      // var y = xy.y + self._randomNum(-50, 50);
+      var x = xy.x;
+      var y = xy.y;
+      var size = self._randomNum(25, 50);
       var lt = {
         lt: new Lightning(self._options),
         x: x,
@@ -223,45 +220,45 @@ var LightnMap = {
   _Animate() {
     var self = this;
     self._clear();
-    var num = self._randomNum(1, self._data.length);
+    var num = self._data.length / 2;
+    var idxs = [];
     for (var i = 0; i < num; i++) {
       var _idx = self._randomNum(1, self._data.length - 1);
-      var lt = self._lts[_idx];
-      var x = lt.x;
-      var y = lt.y;
-      var size = lt.size;
-      var points = self._getPoints(x, y, size);
-      var target = new Vector(
-        x - size,
-        y - size,
-        x + self._randomNum(-10, 10),
-        y + self._randomNum(-10, 10)
-      );
-      points.forEach(p => {
-        lt.lt.Cast(self._context, p, target, self._map);
-      });
+      if(idxs.indexOf(_idx) === -1) {
+        var lt = self._lts[_idx];
+        var x = lt.x;
+        var y = lt.y;
+        var size = lt.size;
+        var points = self._getPoints(x, y, size);
+        var target = new Vector(
+          x - size,
+          y - size,
+          x + self._randomNum(-10, 10),
+          y + self._randomNum(-10, 10)
+        );
+        points.forEach(p => {
+          lt.lt.Cast(self._context, p, target, self._map);
+        });
+      }
+      idxs.push(_idx);
     }
     if (self._timer) clearTimeout(self._timer);
     if (self._timer1) clearTimeout(self._timer1);
-
+    var t = 150;
     self._timer = setTimeout(() => {
-      self._clear();
       self._timer1 = setTimeout(function() {
         self._Animate();
-      }, 400);
-    }, 400);
+      }, t);
+    }, t);
   },
   _randomNum(minNum, maxNum) {
     switch (arguments.length) {
       case 1:
         return parseInt(Math.random() * minNum + 1, 10);
-        break;
       case 2:
         return parseInt(Math.random() * (maxNum - minNum + 1) + minNum, 10);
-        break;
       default:
         return 0;
-        break;
     }
   },
   _clear: function() {
@@ -274,4 +271,4 @@ var LightnMap = {
   destory: function() {
     this._canvas.parentNode.removeChild(this._canvas);
   }
-}
+};
