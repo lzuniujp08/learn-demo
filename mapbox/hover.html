@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title>白天不懂夜的黑</title>
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="stylesheet" href="../css/main.css">
+  <link href="lib/mapbox-gl.css" rel="stylesheet" />
+</head>
+
+<body>
+  <div id="app">
+    <div id="map"></div>
+  </div>
+  <script src="lib/mapbox-gl.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+  <script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+  <script>
+    var that, map;
+    var app = new Vue({
+      el: '#app',
+      mounted: function() {
+        that = this;
+        that.initMap();
+      },
+      methods: {
+        initMap: function() {
+          var rootPath = 'http://127.0.0.1:3000/mapbox/lib/';
+          var mapStyle = {
+            "version": 8,
+            "name": "Dark",
+            "sources": {
+              "geojson": {
+                type: 'geojson',
+                data: '../data/beijing1.geojson'
+              }
+            },
+            "glyphs": rootPath + "fonts/mapbox/{fontstack}/{range}.pbf",
+            "layers": [{
+                "id": "background",
+                "type": "background",
+                "paint": {
+                  "background-color": "#999"
+                }
+              },
+              {
+                'id': 'geojson',
+                'source': 'geojson',
+                'type': 'fill',
+                'paint': {
+                  'fill-color': '#fff',
+                  'fill-opacity': .8
+                }
+              },
+              {
+                'id': 'geojson-border',
+                'source': 'geojson',
+                'type': 'line',
+                'paint': {
+                  'line-color': '#f00',
+                  'line-width': 1
+                }
+              }
+            ]
+          };
+          map = new mapboxgl.Map({
+            container: 'map',
+            maxZoom: 18,
+            minZoom: 6,
+            zoom: 8,
+            center: {
+              lng: 116.6552,
+              lat: 40.2482
+            },
+            style: mapStyle,
+            attributionControl: false,
+            localIdeographFontFamily: "'全新硬笔行书简'"
+          });
+
+          map.on('mousemove', 'geojson-border-h', function(e) {
+            var feature = e.features[0];
+
+          });
+
+          map.on('mouseleave', 'geojson-border-h', function() {
+
+          });
+        }
+      }
+    });
+  </script>
+</body>
+
+</html>

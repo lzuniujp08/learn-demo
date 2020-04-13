@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title>白天不懂夜的黑</title>
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="stylesheet" href="../css/main.css">
+  <link href="lib/mapbox-gl.css" rel="stylesheet" />
+</head>
+
+<body>
+<div id="app">
+  <div id="map"></div>
+</div>
+<script src="lib/mapbox-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue"></script>
+<script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+<script src="../js/lib/d3/d3.v4.min.js"></script>
+<script src="../js/lib/d3/d3-contour.js"></script>
+<script src="../js/lib/d3/d3-array.v1.min.js"></script>
+<script src="../js/lib/d3/d3-geo.v1.min.js"></script>
+<script>
+  var that, map;
+  var svg;
+  var app = new Vue({
+    el: '#app',
+    data: {},
+    mounted: function() {
+      that = this;
+      that.initMap();
+    },
+    methods: {
+      initMap: function() {
+        var mapStyle = {
+          "version": 8,
+          "name": "Dark",
+          "sources": {
+            "XYZTile": {
+              "type": "raster",
+              "tiles": ['http://www.google.cn/maps/vt?lyrs=s@189&gl=cn&x={x}&y={y}&z={z}'],
+              "tileSize": 256
+            }
+          },
+          "layers": [{
+            "id": "XYZTile",
+            "type": "raster",
+            "source": "XYZTile",
+            "minzoom": 0,
+            "maxzoom": 22
+          }]
+        };
+
+        map = new mapboxgl.Map({
+          container: 'map',
+          maxZoom: 18,
+          minZoom: 0,
+          zoom: 3,
+          center: [109.1699, 45.9719],
+          style: mapStyle,
+          attributionControl: false
+        });
+        map.on('load', function() {
+          that.addAqiLayer();
+        });
+      },
+      addAqiLayer() {
+        $.get('../data/aqi.json', function(res) {
+          var header = res[0].header,
+                  data = res[0].data;
+          var proj = d3.geoMercator();
+          path = d3.geoPath(proj)
+          var _data = d3.contours().size([header.nx, header.ny]).thresholds(d3.range(0, 250, 5))(data);
+
+          var geojson = {
+            'type': 'FeatureCollection',
+            'features': []
+          };
+          console.log(geojson);
+          for(var i = 0; i<_data.length;i++) {
+            var d = _data[i];
+            var coords = that.getGeoCoords(d.coordinates);
+            geojson.features.push({
+              type: 'Feature',
+              geometry: {
+                type: "MultiPolygon",
+                coordinates: coords
+              },
+              properties: {
+                val: d.value
+              }
+            });
+          }
+          map.addSource('building',{
+            type: 'geojson',
+            data: geojson
+          });
+          map.addLayer({
+            'id': '3d-buildings',
+            'source': 'building',
+            'type': 'fill',
+            'filter': ['!=', 'val', 0],
+            'paint': {
+              'fill-color': [
+                'interpolate',
+                ['linear'],
+                ['get', 'val'],
+                5, '#313695',
+                20, '#4575b4',
+                40, '#74add1',
+                60, '#abd9e9',
+                80, '#e0f3f8',
+                100, '#ffffbf',
+                120, '#fee090',
+                140, '#fdae61',
+                160, '#f46d43',
+                180, '#d73027',
+                200, '#a50026'
+              ],
+              'fill-opacity': 0.1
+            }
+          });
+        });
+      },
+      getGeoCoords(coords) {
+        // 第1层
+        for(var i = 0; i < coords.length; i++) {
+          var _coords = coords[i];
+          // 第2层
+          for(var j = 0; j < _coords.length; j++) {
+            var __coords = _coords[j];
+            // 第3层
+            for(var k = 0; k < __coords.length; k++) {
+              var coord = __coords[k];
+              coords[i][j][k] = that.unproject(coord);
+            }
+          }
+        }
+        return coords;
+      },
+      unproject(coord) {
+        var lt = map.project([73, 54]);
+        // var rb = map.project([136, 18]);
+        coord = [coord[0] + lt.x, coord[1] + lt.y];
+        var latlon = map.unproject(coord);
+        return [latlon.lng, latlon.lat];
+      }
+    }
+  });
+</script>
+</body>
+
+</html>

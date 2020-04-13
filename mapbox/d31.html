@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title>白天不懂夜的黑</title>
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="stylesheet" href="../css/main.css">
+  <link href="lib/mapbox-gl.css" rel="stylesheet" />
+</head>
+
+<body>
+<div id="app">
+  <div id="map"></div>
+</div>
+<script src="lib/mapbox-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vue"></script>
+<script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+<script src="../js/lib/d3/d3.v4.min.js"></script>
+<script src="../js/lib/d3/d3-contour.js"></script>
+<script src="../js/lib/d3/d3-color.v1.min.js"></script>
+<script src="../js/lib/d3/d3-hsv.v0.1.min.js"></script>
+<script src="../js/lib/d3/d3-array.v1.min.js"></script>
+<script src="../js/lib/d3/d3-geo.v1.min.js"></script>
+<script src="../js/lib/d3/d3-geo-projection.v2.min.js"></script>
+<script>
+  var that, map;
+  var svg;
+  var app = new Vue({
+    el: '#app',
+    data: {},
+    mounted: function() {
+      that = this;
+      that.initMap();
+    },
+    methods: {
+      initMap: function() {
+        var mapStyle = {
+          "version": 8,
+          "name": "Dark",
+          "sources": {
+            "XYZTile": {
+              "type": "raster",
+              "tiles": ['http://www.google.cn/maps/vt?lyrs=s@189&gl=cn&x={x}&y={y}&z={z}'],
+              "tileSize": 256
+            }
+          },
+          "layers": [{
+            "id": "XYZTile",
+            "type": "raster",
+            "source": "XYZTile",
+            "minzoom": 0,
+            "maxzoom": 22
+          }]
+        };
+
+        map = new mapboxgl.Map({
+          container: 'map',
+          maxZoom: 18,
+          minZoom: 0,
+          zoom: 3,
+          center: [109.1699, 45.9719],
+          style: mapStyle,
+          attributionControl: false
+        });
+        map.on('load', function() {
+          that.addAqiLayer();
+        });
+      },
+      addAqiLayer() {
+        svg = d3.select(map.getCanvasContainer()).append('svg')
+                .attr('class', 'svgTransform')
+                .attr("id", "d3_svg");
+        var i0 = d3.interpolateHsvLong(d3.hsv("#96f3ff"), d3.hsv("#fffa00")),
+                i1 = d3.interpolateHsvLong(d3.hsv("#fffa00"), d3.hsv("#ff7300")),
+                i2 = d3.interpolateHsvLong(d3.hsv("#ff7300"), d3.hsv("#8200a0")),
+                interpolateTerrain = function (t) {
+                  if (t < 0.5) {
+                    return i0(t * 2);
+                  }
+                  else if (t > 0.5 || t < 1) {
+                    return i1((t - 0.5) * 2.5)
+                  } else {
+                    return i2((t - 1) * 2)
+                  }
+                },
+                color = d3.scaleSequential(interpolateTerrain).domain([0, 190]);
+        $.get('../data/aqi.json', function(res) {
+          var header = res[0].header,
+                  data = res[0].data;
+          var lt = map.project([73, 54]);
+          var rb = map.project([136, 18]);
+          var width = Math.abs(lt.x - rb.x);
+          var height = Math.abs(lt.y - rb.y);
+          svg.attr("width", width);
+          svg.attr("height", height);
+          var dom = svg._groups[0][0];
+          dom.style.position = 'absolute';
+          dom.style.top = lt.x;
+          dom.style.left = lt.y;
+          dom.style.zIndex = 99;
+          var proj = d3.geoMercator();
+          // var path = d3.geoPath();
+          var path = d3.geoPath(d3.geoIdentity().scale(1, 1));
+          svg.selectAll("path")
+                  .data(d3.contours().size([header.nx, header.ny]).thresholds(d3.range(0, 250, 5))(data))
+                  .enter().append("path")
+                  .attr("d", path)
+                  .attr("transform", function (d) {
+                    return "translate(" + lt.x + "," + lt.y + ") scale(" + width / header.nx + "," + height / header.ny + ")"; //调整缩放比例
+                  }).attr("fill", function (d) {
+            return color(d.value);
+          }).attr("fill-opacity", 0.1)
+        });
+      }
+    }
+  });
+</script>
+</body>
+
+</html>
