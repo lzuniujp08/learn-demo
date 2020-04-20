@@ -2,121 +2,375 @@
 <html lang="en">
 
 <head>
-  <meta charset="utf-8">
-  <meta http-equiv="x-ua-compatible" content="ie=edge">
-  <title>白天不懂夜的黑</title>
-  <meta name="description" content="">
-  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <link rel="stylesheet" href="../css/main.css">
-  <link href="lib/mapbox-gl.css" rel="stylesheet" />
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <title>白天不懂夜的黑</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="../css/main.css">
+    <link href="lib/mapbox-gl.css" rel="stylesheet" />
 </head>
 
 <body>
 <div id="app">
-  <div id="map"></div>
+    <div id="map">
+        <ul class="map-legend">
+            <li style="height: 30px;">
+                <button @click="pause()">暂停</button>
+            </li>
+            <li v-for="(item, index) in colors" :key="index">
+                <span :style="{background : 'rgba('+ item.color +')'}"></span>
+                <label>{{ item.lable }}</label>
+            </li>
+        </ul>
+    </div>
 </div>
 <script src="lib/mapbox-gl.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/vue"></script>
 <script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
-<script src="../js/lib/d3/d3.v4.min.js"></script>
+<script src="../js/lib/d3/d3.min.js"></script>
 <script src="../js/lib/d3/d3-contour.js"></script>
 <script src="../js/lib/d3/d3-color.v1.min.js"></script>
 <script src="../js/lib/d3/d3-hsv.v0.1.min.js"></script>
-<script src="../js/lib/d3/d3-array.v1.min.js"></script>
-<script src="../js/lib/d3/d3-geo.v1.min.js"></script>
-<script src="../js/lib/d3/d3-geo-projection.v2.min.js"></script>
 <script>
-  var that, map;
-  var svg;
-  var app = new Vue({
-    el: '#app',
-    data: {},
-    mounted: function() {
-      that = this;
-      that.initMap();
-    },
-    methods: {
-      initMap: function() {
-        var mapStyle = {
-          "version": 8,
-          "name": "Dark",
-          "sources": {
-            "XYZTile": {
-              "type": "raster",
-              "tiles": ['http://www.google.cn/maps/vt?lyrs=s@189&gl=cn&x={x}&y={y}&z={z}'],
-              "tileSize": 256
-            }
-          },
-          "layers": [{
-            "id": "XYZTile",
-            "type": "raster",
-            "source": "XYZTile",
-            "minzoom": 0,
-            "maxzoom": 22
-          }]
-        };
-
-        map = new mapboxgl.Map({
-          container: 'map',
-          maxZoom: 18,
-          minZoom: 0,
-          zoom: 3,
-          center: [109.1699, 45.9719],
-          style: mapStyle,
-          attributionControl: false
-        });
-        map.on('load', function() {
-          that.addAqiLayer();
-        });
-      },
-      addAqiLayer() {
-        svg = d3.select(map.getCanvasContainer()).append('svg')
-                .attr('class', 'svgTransform')
-                .attr("id", "d3_svg");
-        var i0 = d3.interpolateHsvLong(d3.hsv("#96f3ff"), d3.hsv("#fffa00")),
-                i1 = d3.interpolateHsvLong(d3.hsv("#fffa00"), d3.hsv("#ff7300")),
-                i2 = d3.interpolateHsvLong(d3.hsv("#ff7300"), d3.hsv("#8200a0")),
-                interpolateTerrain = function (t) {
-                  if (t < 0.5) {
-                    return i0(t * 2);
-                  }
-                  else if (t > 0.5 || t < 1) {
-                    return i1((t - 0.5) * 2.5)
-                  } else {
-                    return i2((t - 1) * 2)
-                  }
+    var that, map;
+    var canvas, context;
+    var app = new Vue({
+        el: '#app',
+        data: {
+            index: 0,
+            timer: 0,
+            colors: [
+                {
+                    "id": "c3bbf88a14404a3ebae7c9ebfbf44ce5",
+                    "legendCode": "hspt_tem",
+                    "color": "0,0,153,255",
+                    "lable": "<=-30",
+                    "sortBy": 0,
+                    "projectCode": null
                 },
-                color = d3.scaleSequential(interpolateTerrain).domain([0, 190]);
-        $.get('../data/aqi.json', function(res) {
-          var header = res[0].header,
-                  data = res[0].data;
-          var lt = map.project([73, 54]);
-          var rb = map.project([136, 18]);
-          var width = Math.abs(lt.x - rb.x);
-          var height = Math.abs(lt.y - rb.y);
-          svg.attr("width", width);
-          svg.attr("height", height);
-          var dom = svg._groups[0][0];
-          dom.style.position = 'absolute';
-          dom.style.top = lt.x;
-          dom.style.left = lt.y;
-          dom.style.zIndex = 99;
-          var proj = d3.geoMercator();
-          // var path = d3.geoPath();
-          var path = d3.geoPath(d3.geoIdentity().scale(1, 1));
-          svg.selectAll("path")
-                  .data(d3.contours().size([header.nx, header.ny]).thresholds(d3.range(0, 250, 5))(data))
-                  .enter().append("path")
-                  .attr("d", path)
-                  .attr("transform", function (d) {
-                    return "translate(" + lt.x + "," + lt.y + ") scale(" + width / header.nx + "," + height / header.ny + ")"; //调整缩放比例
-                  }).attr("fill", function (d) {
-            return color(d.value);
-          }).attr("fill-opacity", 0.1)
-        });
-      }
-    }
-  });
+                {
+                    "id": "401bf219940d41f99fd0f3780a4745e5",
+                    "legendCode": "hspt_tem",
+                    "color": "0,0,255,255",
+                    "lable": "-30~-25",
+                    "sortBy": 1,
+                    "projectCode": null
+                },
+                {
+                    "id": "b7a369cfa95e4c5796c83ead1688c369",
+                    "legendCode": "hspt_tem",
+                    "color": "0,102,255,255",
+                    "lable": "-25~-20",
+                    "sortBy": 2,
+                    "projectCode": null
+                },
+                {
+                    "id": "9fe46a8b7e514ed4bdfd7e987b6f9150",
+                    "legendCode": "hspt_tem",
+                    "color": "51,153,255,255",
+                    "lable": "-20~-15",
+                    "sortBy": 3,
+                    "projectCode": null
+                },
+                {
+                    "id": "fba0258a8375432ba3367418a29aceb2",
+                    "legendCode": "hspt_tem",
+                    "color": "0,204,255,255",
+                    "lable": "-15~-10",
+                    "sortBy": 4,
+                    "projectCode": null
+                },
+                {
+                    "id": "8423c8fbbab041629cc127450093789f",
+                    "legendCode": "hspt_tem",
+                    "color": "0,255,255,255",
+                    "lable": "-10~-5",
+                    "sortBy": 5,
+                    "projectCode": null
+                },
+                {
+                    "id": "88d1883ee0a34d97b5e4fc8c4adff3e9",
+                    "legendCode": "hspt_tem",
+                    "color": "153,255,255,255",
+                    "lable": "-5~0",
+                    "sortBy": 6,
+                    "projectCode": null
+                },
+                {
+                    "id": "4566bdf704b14f3a8ead6ea231667d42",
+                    "legendCode": "hspt_tem",
+                    "color": "0,255,0,255",
+                    "lable": "0~5",
+                    "sortBy": 7,
+                    "projectCode": null
+                },
+                {
+                    "id": "e4fedaa99f7a47f3adf6b816a16f37a4",
+                    "legendCode": "hspt_tem",
+                    "color": "153,255,102,255",
+                    "lable": "5~10",
+                    "sortBy": 8,
+                    "projectCode": null
+                },
+                {
+                    "id": "dd5f77e1b620471d82699437b906c763",
+                    "legendCode": "hspt_tem",
+                    "color": "204,255,51,255",
+                    "lable": "10~15",
+                    "sortBy": 9,
+                    "projectCode": null
+                },
+                {
+                    "id": "56a6878003ab4dfe88261c879bd196f2",
+                    "legendCode": "hspt_tem",
+                    "color": "255,255,0,255",
+                    "lable": "15~20",
+                    "sortBy": 10,
+                    "projectCode": null
+                },
+                {
+                    "id": "1cc01a6276494936b8c076df5a68a02b",
+                    "legendCode": "hspt_tem",
+                    "color": "255,204,0,255",
+                    "lable": "20~25",
+                    "sortBy": 11,
+                    "projectCode": null
+                },
+                {
+                    "id": "38cc1002b645443aa7d546050c156f4c",
+                    "legendCode": "hspt_tem",
+                    "color": "255,153,0,255",
+                    "lable": "25~30",
+                    "sortBy": 12,
+                    "projectCode": null
+                },
+                {
+                    "id": "fb5ede56006e49b384c68897a1be871f",
+                    "legendCode": "hspt_tem",
+                    "color": "255,102,0,255",
+                    "lable": "30~35",
+                    "sortBy": 13,
+                    "projectCode": null
+                },
+                {
+                    "id": "726f0b7ec0a64973849b4f28bc130041",
+                    "legendCode": "hspt_tem",
+                    "color": "255,0,0,255",
+                    "lable": "35~37",
+                    "sortBy": 14,
+                    "projectCode": null
+                },
+                {
+                    "id": "02d4e94bd51b4782953f3b63717c36fb",
+                    "legendCode": "hspt_tem",
+                    "color": "183,0,0,255",
+                    "lable": "37~39",
+                    "sortBy": 15,
+                    "projectCode": null
+                },
+                {
+                    "id": "b4793224e7174866a71572bbe2fb915a",
+                    "legendCode": "hspt_tem",
+                    "color": "255,0,153,255",
+                    "lable": "39~41",
+                    "sortBy": 16,
+                    "projectCode": null
+                },
+                {
+                    "id": "4afedc05077849b3bf6daaa6254c8e19",
+                    "legendCode": "hspt_tem",
+                    "color": "204,0,255,255",
+                    "lable": "41~43",
+                    "sortBy": 17,
+                    "projectCode": null
+                },
+                {
+                    "id": "ab0c78ae293a47baa94b61a078db18c8",
+                    "legendCode": "hspt_tem",
+                    "color": "153,0,204,255",
+                    "lable": "43~45",
+                    "sortBy": 18,
+                    "projectCode": null
+                },
+                {
+                    "id": "5725a95411414b2985176f74af4f236a",
+                    "legendCode": "hspt_tem",
+                    "color": "102,0,102,255",
+                    "lable": ">=45",
+                    "sortBy": 19,
+                    "projectCode": null
+                }
+            ]
+        },
+        mounted: function() {
+            that = this;
+            that.initMap();
+        },
+        methods: {
+            initMap: function() {
+                var mapStyle = {
+                    "version": 8,
+                    "name": "Dark",
+                    "sources": {
+                        "XYZTile": {
+                            "type": "raster",
+                            "tiles": ['http://www.google.cn/maps/vt?lyrs=s@189&gl=cn&x={x}&y={y}&z={z}'],
+                            "tileSize": 256
+                        }
+                    },
+                    "layers": [{
+                        "id": "XYZTile",
+                        "type": "raster",
+                        "source": "XYZTile",
+                        "minzoom": 0,
+                        "maxzoom": 22
+                    }]
+                };
+
+                map = new mapboxgl.Map({
+                    container: 'map',
+                    maxZoom: 18,
+                    minZoom: 0,
+                    zoom: 4.7,
+                    center: {lng: 109.89829207666185, lat: 23.443947820324084},
+                    style: mapStyle,
+                    attributionControl: false,
+                    crs: 'EPSG:4326'
+                });
+                map.on('load', function() {
+                    that.addAqiLayer();
+                    that.play();
+                });
+            },
+            play() {
+                that.timer = setInterval(function () {
+                    that.index ++;
+                    if(that.index === 72) that.index = 0;
+                    that.addAqiLayer();
+                }, 1000)
+            },
+            pause() {
+                window.clearInterval(that.timer);
+            },
+            addAqiLayer() {
+                var url = '../data/tem/'+ that.index + '.json';
+                console.time('timer');
+                $.ajax({
+                    type : "get",
+                    url : url,
+                    async : false,
+                    success : function(res){
+                        var header = res.header,
+                            data = res.data;
+                        var width = header.nx;
+                        var height = header.ny;
+                        if (!canvas) {
+                            canvas = document.createElement('canvas');
+                            canvas.setAttribute('id', 'canvas-layer');
+                            map.getCanvasContainer().appendChild(canvas);
+                            context = canvas.getContext('2d');
+                            //设置canvas透明度
+                            canvas.width = width;
+                            canvas.height = height;
+                            context.clearRect(0, 0, width, height);
+                        }
+                        canvas.style.display = 'block';
+                        var d3Path = d3.geoPath(null, context); //绘图笔
+                        //绘图登高线图
+                        var contours = d3.contours()
+                            .size([header.nx, header.ny])
+                            .thresholds(d3.range(-30, 45, 5))(data);
+                        contours.forEach(function(geometry) {
+                            context.beginPath();
+                            d3Path(geometry);
+                            var v = geometry.value;
+                            var acolor = that.getColor(v);
+                            context.fillStyle = acolor;
+                            context.fill();
+                            context.strokeStyle = acolor;
+                            context.stroke();
+                        });
+                        var source = map.getSource('canvas-source');
+                        if(source) {
+                            map.removeLayer('canvas-layer');
+                            map.removeSource('canvas-source');
+                        }
+                        map.addSource('canvas-source', {
+                            type: 'canvas',
+                            canvas: 'canvas-layer',
+                            coordinates: [
+                                [header.lo1, header.la1],
+                                [header.lo2, header.la1],
+                                [header.lo2, header.la2],
+                                [header.lo1, header.la2]
+                            ],
+                            animate: true
+                        });
+                        map.addLayer({
+                            id: 'canvas-layer',
+                            type: 'raster',
+                            source: 'canvas-source',
+                            'paint': {
+                                'raster-opacity': 0.65,
+                                'raster-fade-duration': 0
+                            }
+                        });
+                        canvas.style.display = 'none';
+                        console.timeEnd('timer');
+                    }
+                });
+            },
+            // getColor(value) {
+            //     // var colors = ["#96f3ff", "#fffa00", "#ff7300", "#8200a0"];
+            //     var interpolateTerrain = function(t) {
+            //         var i0 = d3.interpolateHsvLong(d3.hsv("#0000ff"), d3.hsv("#ffff00")),
+            //             i1 = d3.interpolateHsvLong(d3.hsv("#ffff00"), d3.hsv("#ff9900")),
+            //             i2 = d3.interpolateHsvLong(d3.hsv("#ff9900"), d3.hsv("#ff0000"));
+            //         if (t < 0.5) {
+            //             return i0(t * 2);
+            //         } else if (t > 0.5 || t < 1) {
+            //             return i1((t - 0.5) * 2.5)
+            //         } else {
+            //             return i2((t - 1) * 2)
+            //         }
+            //     };
+            //     var color = d3.scaleSequential(interpolateTerrain).domain([-30, 45]);
+            //     var res = color(value);
+            //     // res = value === 0 ? 'rgba(0, 0, 0, 0)' : res;
+            //     return res;
+            // },
+            getColor(val) {
+                var colors = that.colors;
+              for(var i = 0; i<colors.length;i++) {
+                var c = colors[i];
+                var label = c.lable;
+                if(label.indexOf('<') !== -1 || label.indexOf('≤') !== -1) {
+                  var n = that.getNum(label);
+                  if(val < n) {
+                    return 'rgba('+ c.color +')';
+                  }
+                } else if (label.indexOf('>') !== -1 || label.indexOf('≥') !== -1) {
+                  var n = that.getNum(label);
+                  if(val <= n) {
+                    return 'rgba('+ c.color +')';
+                  }
+                } else {
+                  var vals = label.split('~').map(Number);
+                  if(val >= vals[0] && val < vals[1]) {
+                    return 'rgba('+ c.color +')';
+                  }
+                }
+              }
+            },
+            getNum(str) {
+                if (typeof (v) == 'string') {
+                    var regEx = /[^\d|^\.|^\-]/g;
+                    return v.replace(regEx, '');
+                }
+            }
+        }
+    });
 </script>
 </body>
 

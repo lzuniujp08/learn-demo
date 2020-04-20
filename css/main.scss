@@ -420,9 +420,23 @@ $white65: rgba(255, 255, 255, 0.65);
   animation:rotate 1s linear infinite;
 }
 
-.svg-transform {
+.map-legend {
   position: absolute;
   z-index: 99;
-  top: 0;
-  left: 0;
+  bottom: 15px;
+  left: 15px;
+  padding: 10px;
+  font-size: 12px;
+  background-color: white;
+  opacity: 0.65;
+  li {
+    height: 13px;
+    line-height: 13px;
+    span {
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      margin-right: 4px;
+    }
+  }
 }

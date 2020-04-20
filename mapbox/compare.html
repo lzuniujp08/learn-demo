@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <title>白天不懂夜的黑</title>
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="stylesheet" href="../css/main.css">
+  <link href="lib/mapbox-gl.css" rel="stylesheet" />
+  <link href="lib/mapbox-gl-compare.css" rel="stylesheet" />
+</head>
+
+<body>
+  <div id="app">
+    <div id="map1" class="map"></div>
+    <div id="map2" class="map"></div>
+  </div>
+  <script src="lib/mapbox-gl.js"></script>
+  <script src="lib/mapbox-gl-compare.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+  <script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
+  <script>
+    var that, map, mapCompare;
+
+    var app = new Vue({
+      el: '#app',
+      data: {
+        coords: [
+          [95.0595932006835938, 33.0704185485839588],
+          [124.9745932006836000, 33.0704185485839588],
+          [124.9745932006836000, 15.3704185485839560],
+          [95.0595932006835938, 15.3704185485839560]
+        ],
+        opacity: 1,
+        mapOptions: {
+          maxZoom: 18,
+          minZoom: 0,
+          zoom: 4.5,
+          center: {lng: 111.82842051439866, lat: 24.877521729248954},
+          attributionControl: false
+        }
+      },
+      mounted: function() {
+        that = this;
+        that.initMap();
+      },
+      methods: {
+        initMap: function() {
+          var mapStyle = {
+            "version": 8,
+            "name": "Dark",
+            "sources": {
+              "XYZTile": {
+                "type": "raster",
+                "tiles": ['http://www.google.cn/maps/vt?lyrs=s@189&gl=cn&x={x}&y={y}&z={z}'],
+                "tileSize": 256,
+              }
+            },
+            "layers": [{
+                "id": "background",
+                "type": "background",
+                "paint": {
+                  "background-color": "#111"
+                }
+              },
+              {
+                "id": "XYZTile",
+                "type": "raster",
+                "source": "XYZTile",
+                "minzoom": 0,
+                "maxzoom": 18
+              }
+            ]
+          };
+          var option = Object.assign({
+            container: 'map1',
+            style: mapStyle
+          }, that.mapOptions);
+          map = new mapboxgl.Map(option);
+          map.on('load', function() {
+            that.addImage();
+            that.initCompareMap();
+          });
+        },
+        addImage() {
+          map.addSource('loopimage', {
+            type: 'image',
+            url: '../css/tem.png',
+            coordinates: that.coords
+          });
+          map.addLayer({
+            'id': 'loopimage',
+            'source': 'loopimage',
+            'type': 'raster',
+            'paint': {
+              'raster-opacity': that.opacity,
+              'raster-fade-duration': 0
+            }
+          });
+        },
+        initCompareMap() {
+          var mapStyle = {
+            "version": 8,
+            "name": "Dark",
+            "sources": {
+              "XYZTile": {
+                "type": "raster",
+                "tiles": ['http://www.google.cn/maps/vt?lyrs=s@189&gl=cn&x={x}&y={y}&z={z}'],
+                "tileSize": 256,
+              },
+              "compareimage": {
+                type: 'image',
+                url: '../css/wind.png',
+                coordinates: that.coords
+              }
+            },
+            "layers": [{
+              "id": "XYZTile",
+              "type": "raster",
+              "source": "XYZTile",
+              "minzoom": 0,
+              "maxzoom": 18
+            }, {
+              'id': 'compareimage',
+              'source': 'compareimage',
+              'type': 'raster',
+              'paint': {
+                'raster-opacity': that.opacity,
+                'raster-fade-duration': 0
+              }
+            }]
+          };
+          var option = Object.assign({
+            container: 'map2',
+            style: mapStyle
+          }, that.mapOptions);
+          mapCompare = new mapboxgl.Map(option);
+          mapCompare.on('load', function() {
+            var container = '#app';
+            new mapboxgl.Compare(map, mapCompare, container, {});
+          });
+        }
+      }
+    });
+  </script>
+</body>
+
+</html>
