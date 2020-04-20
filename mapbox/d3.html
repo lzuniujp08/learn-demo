@@ -59,6 +59,7 @@
           minZoom: 0,
           zoom: 3,
           center: [109.1699, 45.9719],
+          crs: 'EPSG:4326',
           style: mapStyle,
           attributionControl: false
         });
@@ -71,7 +72,7 @@
           var header = res[0].header,
                   data = res[0].data;
           var proj = d3.geoMercator();
-          path = d3.geoPath(proj)
+          path = d3.geoPath(proj);
           var _data = d3.contours().size([header.nx, header.ny]).thresholds(d3.range(0, 250, 5))(data);
 
           var geojson = {

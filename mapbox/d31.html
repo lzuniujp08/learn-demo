@@ -280,7 +280,7 @@
                         //绘图登高线图
                         var contours = d3.contours()
                             .size([header.nx, header.ny])
-                            .thresholds(d3.range(-30, 45, 5))(data);
+                            .thresholds(d3.range(-30, 40, 10))(data);
                         contours.forEach(function(geometry) {
                             context.beginPath();
                             d3Path(geometry);
