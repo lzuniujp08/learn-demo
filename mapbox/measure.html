@@ -74,14 +74,19 @@
             function clearMeasure() {
               $(".measure-result").remove();
               var source = map.getSource('points');
+              var json = {
+                'type': 'FeatureCollection',
+                'features': []
+              };
               if(source) {
-                var json = {
-                  'type': 'FeatureCollection',
-                  'features': []
-                };
                 map.getSource('points').setData(json);
                 map.getSource('line-move').setData(json);
                 map.getSource('line').setData(json);
+              }
+              var sourceArea = map.getSource('points-area');
+              if(sourceArea) {
+                map.getSource('points-area').setData(json);
+                map.getSource('line-area').setData(json);
               }
             }
 
@@ -246,7 +251,6 @@
                 map.getCanvas().style.cursor = '';
                 jsonPoint.features = [];
                 jsonLine.features = [];
-                map.doubleClickZoom.enable();
                 tooltip.remove();
                 // 添加关闭按钮
                 const ele = document.createElement('div');
@@ -262,6 +266,7 @@
                         .addTo(map);
                 ele.onclick = function (__e) {
                   __e.stopPropagation();
+                  map.doubleClickZoom.enable();
                   clearMeasure();
                 }
               }
@@ -274,7 +279,25 @@
             // 禁止双击缩放
             map.doubleClickZoom.disable();
             map.getCanvas().style.cursor = 'default';
-
+            function clearMeasure() {
+              $(".measure-result").remove();
+              var source = map.getSource('points');
+              var json = {
+                'type': 'FeatureCollection',
+                'features': []
+              };
+              if(source) {
+                map.getSource('points').setData(json);
+                map.getSource('line-move').setData(json);
+                map.getSource('line').setData(json);
+              }
+              var sourceArea = map.getSource('points-area');
+              if(sourceArea) {
+                map.getSource('points-area').setData(json);
+                map.getSource('line-area').setData(json);
+              }
+            }
+            clearMeasure();
             var jsonPoint = {
               'type': 'FeatureCollection',
               'features': []
@@ -313,7 +336,17 @@
                 source: 'line-area',
                 paint: {
                   'fill-color': '#ff0000',
-                  'fill-opacity': 0.2
+                  'fill-opacity': 0.1
+                }
+              });
+              map.addLayer({
+                id: 'line-area-stroke',
+                type: 'line',
+                source: 'line-area',
+                paint: {
+                  'line-color': '#ff0000',
+                  'line-width': 2,
+                  'line-opacity': 0.65
                 }
               });
               map.addLayer({
@@ -341,20 +374,6 @@
               }
               return area;
             }
-
-            function clearMeasure() {
-              $(".measure-result").remove();
-              var source = map.getSource('points-area');
-              if(source) {
-                var json = {
-                  'type': 'FeatureCollection',
-                  'features': []
-                };
-                map.getSource('points-area').setData(json);
-                map.getSource('line-area').setData(json);
-              }
-            }
-
             function addPoint(coords) {
               jsonPoint.features.push({
                 type: 'Feature',
@@ -395,6 +414,7 @@
                         .addTo(map);
                 _ele.onclick = function (__e) {
                   __e.stopPropagation();
+                  map.doubleClickZoom.enable();
                   clearMeasure();
                 }
               }
