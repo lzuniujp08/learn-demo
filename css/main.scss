@@ -449,9 +449,6 @@ $white65: rgba(255, 255, 255, 0.65);
   padding: 0 3px;
   font-size: 12px;
   box-shadow: 0 0 0 1px #ccc;
-  &.last {
-    box-shadow: 0 0 0 1px #f00;
-  }
   &.close {
     cursor: pointer;
     width: 14px;

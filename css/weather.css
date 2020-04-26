@@ -32,12 +32,12 @@
 /* rain (fast, rain.png) */
 .weather.rain:before, .weather.rain:after {
     background-image: url(./rain.png);
-    -webkit-animation-duration: 3s;
-    animation-duration: 3s;
+    -webkit-animation-duration: 6s;
+    animation-duration: 6s;
 }
 .weather.rain:after {
-    -webkit-animation-duration: 1.5s;
-    animation-duration: 1.5s;
+    -webkit-animation-duration: 3s;
+    animation-duration: 3s;
 }
 /* snow (slow, snow.png) */
 .weather.snow:before, .weather.snow:after {
@@ -65,4 +65,17 @@
 @keyframes weather2 {
     from { background-position: 64px 64px; }
     to { background-position: 64px 1088px; }
+}
+
+.cloud {
+    position: absolute;
+    top: 0;
+    z-index: 9;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+.cloud svg {
+    width: 100%;
+    height: 60%;
 }

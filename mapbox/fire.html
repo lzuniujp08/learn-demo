@@ -8,7 +8,6 @@
   <meta name="description" content="">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <link rel="stylesheet" href="../css/main.css">
-  <link rel="stylesheet" href="../css/weather.css">
   <link href="lib/mapbox-gl.css" rel="stylesheet" />
 </head>
 
@@ -17,6 +16,7 @@
     <div id="map"></div>
   </div>
   <script src="lib/mapbox-gl.js"></script>
+  <script src="lib/fire.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/vue"></script>
   <script src="http://libs.baidu.com/jquery/2.0.0/jquery.min.js"></script>
   <script>
@@ -37,17 +37,19 @@
             "sources": {
               "XYZTile": {
                 "type": "raster",
-                "tiles": ['https://map.geoq.cn/ArcGIS/rest/services/ChinaOnlineStreetPurplishBlue/MapServer/tile/{z}/{y}/{x}'],
+                "tiles": ['http://www.google.cn/maps/vt?lyrs=r@189&gl=cn&x={x}&y={y}&z={z}'],
+                // "tiles": ['https://map.geoq.cn/ArcGIS/rest/services/ChinaOnlineStreetPurplishBlue/MapServer/tile/{z}/{y}/{x}'],
                 "tileSize": 256
               }
             },
             "layers": [{
-              "id": "XYZTile",
-              "type": "raster",
-              "source": "XYZTile",
-              "minzoom": 0,
-              "maxzoom": 22
-            }]
+                "id": "XYZTile",
+                "type": "raster",
+                "source": "XYZTile",
+                "minzoom": 0,
+                "maxzoom": 22
+              }
+            ]
           };
 
           map = new mapboxgl.Map({
@@ -55,28 +57,21 @@
             maxZoom: 18,
             minZoom: 0,
             zoom: 7.4,
-            center: {
-              lng: 113.48405904839296,
-              lat: 20.936801295292057
-            },
+            center: {lng: 113.48405904839296, lat: 20.936801295292057},
             style: mapStyle,
             attributionControl: false
           });
+          // map.on('click', function (e) {
+          //   var lonlat = [e.lngLat.lng, e.lngLat.lat];
+          //   points.push(lonlat);
+          // });
           map.on('load', function() {
-            that.addRainEffect();
+            that.addFire();
           });
-
         },
-        addRainEffect() {
-          var dom = document.createElement('div');
-          dom.style.width = map.getCanvas().width + 'px';
-          dom.style.height = map.getCanvas().height + 'px';
-          dom.style.position = 'absolute';
-          dom.style.top = 0;
-          dom.style.left = 0;
-          map.getCanvasContainer().appendChild(dom);
-          dom.classList.add("weather");
-          dom.classList.add("rain");
+        addFire() {
+          var data = [[109.83267537340481,24.823142678076564],[108.48124602996131,22.640114175170794],[107.49549756768533,27.0391975070076],[114.0936525974393,23.910733524957635],[101.93078850644815,24.707647245678757],[99.7526023881922,26.114967438303736]];
+          FireMap.init(map, data);
         }
       }
     });

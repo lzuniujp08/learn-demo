@@ -420,8 +420,6 @@ ul {
   padding: 0 3px;
   font-size: 12px;
   box-shadow: 0 0 0 1px #ccc; }
-  .measure-result.last {
-    box-shadow: 0 0 0 1px #f00; }
   .measure-result.close {
     cursor: pointer;
     width: 14px;
